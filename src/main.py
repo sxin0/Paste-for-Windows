@@ -217,39 +217,172 @@ class MainWindow(QMainWindow):
         
         # 创建测试数据
         test_items = [
+            # 基础测试卡片
             ClipboardItem(
                 "test_text_1", 
                 "这是一段测试文本内容，用来展示文本类型卡片的边框效果。文本类型使用蓝色边框。", 
                 "text", 
-                datetime.now() - timedelta(minutes=5)
+                datetime.now() - timedelta(minutes=25)
             ),
             ClipboardItem(
                 "test_link_1", 
                 "https://www.example.com", 
                 "link", 
-                datetime.now() - timedelta(minutes=4)
+                datetime.now() - timedelta(minutes=24)
             ),
             ClipboardItem(
                 "test_code_1", 
                 "print('Hello, World!')\ndef main():\n    print('这是一个代码示例')", 
                 "code", 
-                datetime.now() - timedelta(minutes=3)
+                datetime.now() - timedelta(minutes=23)
             ),
             ClipboardItem(
                 "test_file_1", 
                 "C:\\Users\\Documents\\important_document.txt", 
                 "file", 
-                datetime.now() - timedelta(minutes=2)
+                datetime.now() - timedelta(minutes=22)
             ),
             ClipboardItem(
                 "test_image_1", 
                 "图片文件：screenshot.png (2.5MB)", 
                 "image", 
-                datetime.now() - timedelta(minutes=1)
+                datetime.now() - timedelta(minutes=21)
             ),
+            
+            # 更多文本类型卡片
             ClipboardItem(
                 "test_text_2", 
                 "这是另一个文本类型的卡片，用来测试多个相同类型卡片的显示效果。", 
+                "text", 
+                datetime.now() - timedelta(minutes=20)
+            ),
+            ClipboardItem(
+                "test_text_3", 
+                "会议记录：明天下午2点开会，讨论项目进展和下一步计划。", 
+                "text", 
+                datetime.now() - timedelta(minutes=19)
+            ),
+            ClipboardItem(
+                "test_text_4", 
+                "购物清单：牛奶、面包、鸡蛋、水果、蔬菜、肉类、调味品等日常用品。", 
+                "text", 
+                datetime.now() - timedelta(minutes=18)
+            ),
+            ClipboardItem(
+                "test_text_5", 
+                "重要提醒：记得备份重要文件，检查系统更新，整理桌面文件。", 
+                "text", 
+                datetime.now() - timedelta(minutes=17)
+            ),
+            
+            # 更多链接类型卡片
+            ClipboardItem(
+                "test_link_2", 
+                "https://github.com/microsoft/vscode", 
+                "link", 
+                datetime.now() - timedelta(minutes=16)
+            ),
+            ClipboardItem(
+                "test_link_3", 
+                "https://www.python.org/downloads/", 
+                "link", 
+                datetime.now() - timedelta(minutes=15)
+            ),
+            ClipboardItem(
+                "test_link_4", 
+                "https://docs.python.org/3/tutorial/", 
+                "link", 
+                datetime.now() - timedelta(minutes=14)
+            ),
+            ClipboardItem(
+                "test_link_5", 
+                "https://stackoverflow.com/questions/tagged/python", 
+                "link", 
+                datetime.now() - timedelta(minutes=13)
+            ),
+            
+            # 更多代码类型卡片
+            ClipboardItem(
+                "test_code_2", 
+                "import os\nimport sys\n\ndef hello_world():\n    print('Hello, World!')\n    return True", 
+                "code", 
+                datetime.now() - timedelta(minutes=12)
+            ),
+            ClipboardItem(
+                "test_code_3", 
+                "class Calculator:\n    def add(self, a, b):\n        return a + b\n    \n    def multiply(self, a, b):\n        return a * b", 
+                "code", 
+                datetime.now() - timedelta(minutes=11)
+            ),
+            ClipboardItem(
+                "test_code_4", 
+                "async def fetch_data(url):\n    async with aiohttp.ClientSession() as session:\n        async with session.get(url) as response:\n            return await response.text()", 
+                "code", 
+                datetime.now() - timedelta(minutes=10)
+            ),
+            ClipboardItem(
+                "test_code_5", 
+                "def quick_sort(arr):\n    if len(arr) <= 1:\n        return arr\n    pivot = arr[len(arr) // 2]\n    left = [x for x in arr if x < pivot]\n    middle = [x for x in arr if x == pivot]\n    right = [x for x in arr if x > pivot]\n    return quick_sort(left) + middle + quick_sort(right)", 
+                "code", 
+                datetime.now() - timedelta(minutes=9)
+            ),
+            
+            # 更多文件类型卡片
+            ClipboardItem(
+                "test_file_2", 
+                "D:\\Projects\\paste-for-windows\\src\\main.py", 
+                "file", 
+                datetime.now() - timedelta(minutes=8)
+            ),
+            ClipboardItem(
+                "test_file_3", 
+                "C:\\Users\\Documents\\工作\\项目报告.docx", 
+                "file", 
+                datetime.now() - timedelta(minutes=7)
+            ),
+            ClipboardItem(
+                "test_file_4", 
+                "E:\\Downloads\\重要文档.pdf", 
+                "file", 
+                datetime.now() - timedelta(minutes=6)
+            ),
+            ClipboardItem(
+                "test_file_5", 
+                "F:\\备份\\数据库备份.sql", 
+                "file", 
+                datetime.now() - timedelta(minutes=5)
+            ),
+            
+            # 更多图片类型卡片
+            ClipboardItem(
+                "test_image_2", 
+                "图片文件：工作截图.png (1.8MB)", 
+                "image", 
+                datetime.now() - timedelta(minutes=4)
+            ),
+            ClipboardItem(
+                "test_image_3", 
+                "图片文件：会议照片.jpg (3.2MB)", 
+                "image", 
+                datetime.now() - timedelta(minutes=3)
+            ),
+            ClipboardItem(
+                "test_image_4", 
+                "图片文件：设计稿.psd (15.7MB)", 
+                "image", 
+                datetime.now() - timedelta(minutes=2)
+            ),
+            ClipboardItem(
+                "test_image_5", 
+                "图片文件：图标集.svg (256KB)", 
+                "image", 
+                datetime.now() - timedelta(minutes=1)
+            ),
+            
+            # 最后几个测试卡片
+            ClipboardItem(
+                "test_mixed_1", 
+                "这是一个混合内容的测试：包含文本、链接 https://example.com 和代码片段 print('test')", 
                 "text", 
                 datetime.now()
             ),
@@ -265,6 +398,8 @@ class MainWindow(QMainWindow):
         print("   - 代码类型（紫色边框）")
         print("   - 文件类型（红色边框）")
         print("   - 图片类型（橙色边框）")
+        print(f"   📊 总计 {len(test_items)} 个测试卡片")
+        print("   🔄 现在可以测试滚动条功能了")
         print("   按 Win+V 或点击托盘图标查看卡片效果")
     
     def show_main_window(self):

@@ -164,12 +164,18 @@ class BottomPanel(QWidget):
             }
         """)
         
+        # 为滚动区域添加滚轮事件支持
+        self.scroll_area.wheelEvent = self._scroll_area_wheel_event
+        
         # 创建卡片容器widget
         self.cards_container = QWidget()
         self.cards_layout = QHBoxLayout(self.cards_container)
         self.cards_layout.setContentsMargins(20, 20, 20, 20)  # 增加容器边距
         self.cards_layout.setSpacing(8)  # 减少卡片间距，让卡片更紧凑
         self.cards_layout.addStretch()  # 添加弹性空间
+        
+        # 为卡片容器添加滚轮事件支持
+        self.cards_container.wheelEvent = self._cards_container_wheel_event
         
         self.scroll_area.setWidget(self.cards_container)
         
@@ -354,6 +360,122 @@ class BottomPanel(QWidget):
             self.hide_panel()
         else:
             super().keyPressEvent(event)
+    
+    def wheelEvent(self, event):
+        """滚轮事件 - 支持横向滚动"""
+        # 获取滚轮滚动的角度
+        delta = event.angleDelta().y()
+        
+        # 获取水平滚动条
+        horizontal_scrollbar = self.scroll_area.horizontalScrollBar()
+        
+        if horizontal_scrollbar.isVisible():
+            # 计算滚动步长（基于卡片宽度和滚动速度）
+            scroll_step = self._calculate_scroll_step(delta)
+            
+            # 根据滚轮方向决定滚动方向
+            if delta > 0:
+                # 向上滚动，向左移动
+                new_value = horizontal_scrollbar.value() - scroll_step
+            else:
+                # 向下滚动，向右移动
+                new_value = horizontal_scrollbar.value() + scroll_step
+            
+            # 设置新的滚动位置
+            horizontal_scrollbar.setValue(new_value)
+            
+            # 阻止事件继续传播
+            event.accept()
+        else:
+            # 如果没有水平滚动条，让事件继续传播
+            super().wheelEvent(event)
+    
+    def _calculate_scroll_step(self, delta: int) -> int:
+        """计算滚动步长（基于卡片宽度和滚动速度）"""
+        # 卡片宽度（包括间距）
+        card_width = 220  # 卡片固定宽度
+        card_spacing = 8   # 卡片间距
+        total_card_width = card_width + card_spacing
+        
+        # 根据滚动速度调整步长
+        # 快速滚动时滚动更多卡片，慢速滚动时滚动更少卡片
+        speed_factor = abs(delta) / 120.0  # 标准化滚动速度
+        
+        # 基础滚动：1个卡片宽度
+        # 快速滚动：最多3个卡片宽度
+        # 慢速滚动：最少0.5个卡片宽度
+        if speed_factor >= 2.0:
+            # 快速滚动：滚动2-3个卡片
+            cards_to_scroll = min(3, 2 + speed_factor - 2.0)
+        elif speed_factor >= 1.0:
+            # 中等速度：滚动1-2个卡片
+            cards_to_scroll = 1 + (speed_factor - 1.0)
+        else:
+            # 慢速滚动：滚动0.5-1个卡片
+            cards_to_scroll = 0.5 + speed_factor * 0.5
+        
+        # 计算最终滚动步长
+        scroll_step = int(total_card_width * cards_to_scroll)
+        
+        return scroll_step
+    
+    def _scroll_area_wheel_event(self, event):
+        """滚动区域的滚轮事件处理"""
+        # 获取滚轮滚动的角度
+        delta = event.angleDelta().y()
+        
+        # 获取水平滚动条
+        horizontal_scrollbar = self.scroll_area.horizontalScrollBar()
+        
+        if horizontal_scrollbar.isVisible():
+            # 计算滚动步长（基于卡片宽度和滚动速度）
+            scroll_step = self._calculate_scroll_step(delta)
+            
+            # 根据滚轮方向决定滚动方向
+            if delta > 0:
+                # 向上滚动，向左移动
+                new_value = horizontal_scrollbar.value() - scroll_step
+            else:
+                # 向下滚动，向右移动
+                new_value = horizontal_scrollbar.value() + scroll_step
+            
+            # 设置新的滚动位置
+            horizontal_scrollbar.setValue(new_value)
+            
+            # 阻止事件继续传播
+            event.accept()
+        else:
+            # 如果没有水平滚动条，让事件继续传播
+            event.ignore()
+    
+    def _cards_container_wheel_event(self, event):
+        """卡片容器的滚轮事件处理"""
+        # 获取滚轮滚动的角度
+        delta = event.angleDelta().y()
+        
+        # 获取水平滚动条
+        horizontal_scrollbar = self.scroll_area.horizontalScrollBar()
+        
+        if horizontal_scrollbar.isVisible():
+            # 计算滚动步长（基于卡片宽度和滚动速度）
+            scroll_step = self._calculate_scroll_step(delta)
+            
+            # 根据滚轮方向决定滚动方向
+            if delta > 0:
+                # 向上滚动，向左移动
+                new_value = horizontal_scrollbar.value() - scroll_step
+            else:
+                # 向下滚动，向右移动
+                new_value = horizontal_scrollbar.value() + scroll_step
+            
+            # 设置新的滚动位置
+            horizontal_scrollbar.setValue(new_value)
+            
+            # 阻止事件继续传播
+            event.accept()
+        else:
+            # 如果没有水平滚动条，让事件继续传播
+            event.ignore()
 
 
 class ClipboardItemWidget(QWidget):

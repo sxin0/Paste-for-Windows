@@ -157,23 +157,74 @@ class TrayDemoWindow(QMainWindow):
         from src.core.clipboard_manager import ClipboardItem
         
         test_items = [
-            "托盘图标功能演示 - 这是一个测试文本",
-            "https://www.example.com - 示例链接",
-            "C:\\Users\\Documents\\demo.txt - 示例文件路径",
-            "def tray_demo():\n    print('托盘功能演示')\n    return True - 示例代码",
+            # 文本类型内容
+            "托盘图标功能演示 - 这是一个测试文本，用于验证滚动条功能",
             "重要提醒：点击托盘图标可以快速唤醒底部交互窗口",
-            "购物清单：苹果、香蕉、橙子、葡萄",
-            "联系方式：demo@example.com",
-            "项目进度：托盘功能开发完成",
-            "待办事项：1. 测试托盘功能 2. 优化用户体验",
-            "使用技巧：单击或双击托盘图标都可以唤醒底部窗口"
+            "购物清单：苹果、香蕉、橙子、葡萄、草莓、蓝莓、猕猴桃",
+            "联系方式：demo@example.com - 演示邮箱",
+            "项目进度：托盘功能开发完成，正在测试滚动条效果",
+            "待办事项：1. 测试托盘功能 2. 优化用户体验 3. 完善滚动条",
+            "使用技巧：单击或双击托盘图标都可以唤醒底部窗口",
+            "工作笔记：今天完成了托盘功能的开发，明天测试滚动条",
+            "学习计划：本周学习PyQt6高级特性，下周开始学习系统托盘",
+            "健康提醒：记得多喝水，适当运动，保持良好作息",
+            "财务记录：本月收入6000元，支出3500元，结余2500元",
+            "旅行计划：下个月去上海旅游，需要提前订票和酒店",
+            
+            # 链接类型内容
+            "https://www.example.com - 示例链接",
+            "https://github.com/microsoft/vscode - VS Code官方仓库",
+            "https://www.python.org/downloads/ - Python官方下载页面",
+            "https://docs.python.org/3/tutorial/ - Python官方教程",
+            "https://stackoverflow.com/questions/tagged/python - Python相关问题",
+            "https://www.w3schools.com/python/ - Python学习网站",
+            "https://realpython.com/ - 高质量Python教程",
+            "https://pypi.org/ - Python包索引",
+            "https://www.jetbrains.com/pycharm/ - PyCharm IDE",
+            "https://code.visualstudio.com/ - Visual Studio Code",
+            
+            # 文件类型内容
+            "C:\\Users\\Documents\\demo.txt - 示例文件路径",
+            "D:\\Projects\\paste-for-windows\\src\\main.py - 项目主文件",
+            "E:\\工作\\项目报告.docx - 工作文档",
+            "F:\\备份\\数据库备份.sql - 数据库备份文件",
+            "G:\\下载\\重要文档.pdf - 下载的PDF文档",
+            "H:\\图片\\工作截图.png - 工作截图",
+            "I:\\音乐\\favorite_songs.mp3 - 音乐文件",
+            "J:\\视频\\tutorial.mp4 - 教程视频",
+            "K:\\代码\\web_project\\index.html - 网页文件",
+            "L:\\文档\\技术手册.pdf - 技术文档",
+            
+            # 代码类型内容
+            "def tray_demo():\n    print('托盘功能演示')\n    return True - 示例代码",
+            "class TrayManager:\n    def __init__(self):\n        self.tray_icon = None\n    def show_tray(self):\n        # 显示托盘图标\n        pass - 托盘管理类",
+            "async def tray_click_handler():\n    await show_notification('托盘被点击了')\n    return True - 异步点击处理",
+            "def create_tray_menu():\n    menu = QMenu()\n    menu.addAction('显示窗口')\n    menu.addAction('退出')\n    return menu - 创建托盘菜单",
+            "import os\nimport sys\n\ndef main():\n    print('托盘应用启动')\n    return 0\n\nif __name__ == '__main__':\n    main() - 主程序入口",
+            "def show_notification(title, message):\n    from PyQt6.QtWidgets import QSystemTrayIcon\n    tray = QSystemTrayIcon()\n    tray.showMessage(title, message) - 显示通知",
+            "class SystemTray:\n    def __init__(self, parent=None):\n        self.parent = parent\n        self.setup_tray()\n    def setup_tray(self):\n        # 设置托盘\n        pass - 系统托盘类",
+            "def handle_tray_activation(reason):\n    if reason == QSystemTrayIcon.ActivationReason.Trigger:\n        show_main_window()\n    elif reason == QSystemTrayIcon.ActivationReason.DoubleClick:\n        show_bottom_panel() - 托盘激活处理",
+            "def create_context_menu():\n    context_menu = QMenu()\n    context_menu.addAction('设置')\n    context_menu.addSeparator()\n    context_menu.addAction('关于')\n    context_menu.addAction('退出')\n    return context_menu - 创建上下文菜单",
+            "def tray_icon_clicked():\n    if main_window.isVisible():\n        main_window.hide()\n    else:\n        main_window.show()\n        main_window.raise_()\n        main_window.activateWindow() - 托盘图标点击处理",
+            
+            # 联系信息类型
+            "电话号码：123-456-7890 - 联系人信息",
+            "邮箱地址：demo@example.com - 演示邮箱",
+            "微信：demo_wechat_123 - 微信联系方式",
+            "QQ：987654321 - QQ号码",
+            "地址：北京市朝阳区某某街道456号 - 联系地址",
+            "公司电话：010-87654321 - 公司联系方式",
+            "紧急联系人：李四 139-0000-0000 - 紧急联系信息",
+            "客户邮箱：client@demo.com - 客户联系方式",
+            "技术支持：support@demo.com - 技术支持邮箱",
+            "招聘邮箱：hr@demo.com - 人力资源邮箱",
         ]
         
         for i, content in enumerate(test_items):
             item = ClipboardItem(id="", content=content)
             self.clipboard_manager._add_item(item)
         
-        self.status_label.setText(f"✅ 已添加 {len(test_items)} 个测试项目 - 现在可以点击托盘图标测试")
+        self.status_label.setText(f"✅ 已添加 {len(test_items)} 个测试项目 - 现在可以点击托盘图标测试滚动条功能")
     
     def show_bottom_panel(self):
         """显示底部面板"""

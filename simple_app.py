@@ -168,23 +168,72 @@ class SimpleApp(QMainWindow):
         from src.core.clipboard_manager import ClipboardItem
         
         test_items = [
-            "这是一个测试文本内容，用于演示搜索功能",
-            "https://www.example.com - 这是一个链接",
-            "C:\\Users\\Documents\\important_file.txt - 文件路径",
+            # 文本类型内容
+            "这是一个测试文本内容，用于演示搜索功能和滚动条效果",
+            "重要的会议记录：明天下午2点开会，讨论项目进展和下一步计划",
+            "购物清单：牛奶、面包、鸡蛋、水果、蔬菜、肉类、调味品等日常用品",
+            "项目进度：第一阶段已完成，开始第二阶段开发，预计下周完成",
+            "待办事项：1. 完成文档 2. 测试功能 3. 部署应用 4. 用户培训",
+            "工作笔记：今天完成了主要功能的开发，明天需要测试和优化",
+            "学习计划：本周学习Python高级特性，下周开始学习Web开发",
+            "健康提醒：记得多喝水，适当运动，保持良好作息",
+            "财务记录：本月收入5000元，支出3000元，结余2000元",
+            "旅行计划：下个月去北京旅游，需要提前订票和酒店",
+            
+            # 链接类型内容
+            "https://www.example.com - 这是一个示例链接",
+            "https://github.com/microsoft/vscode - VS Code官方仓库",
+            "https://www.python.org/downloads/ - Python官方下载页面",
+            "https://docs.python.org/3/tutorial/ - Python官方教程",
+            "https://stackoverflow.com/questions/tagged/python - Python相关问题",
+            "https://www.w3schools.com/python/ - Python学习网站",
+            "https://realpython.com/ - 高质量Python教程",
+            "https://pypi.org/ - Python包索引",
+            "https://www.jetbrains.com/pycharm/ - PyCharm IDE",
+            "https://code.visualstudio.com/ - Visual Studio Code",
+            
+            # 文件类型内容
+            "C:\\Users\\Documents\\important_file.txt - 重要文件路径",
+            "D:\\Projects\\paste-for-windows\\src\\main.py - 项目主文件",
+            "E:\\工作\\项目报告.docx - 工作文档",
+            "F:\\备份\\数据库备份.sql - 数据库备份文件",
+            "G:\\下载\\重要文档.pdf - 下载的PDF文档",
+            "H:\\图片\\工作截图.png - 工作截图",
+            "I:\\音乐\\favorite_songs.mp3 - 音乐文件",
+            "J:\\视频\\tutorial.mp4 - 教程视频",
+            "K:\\代码\\web_project\\index.html - 网页文件",
+            "L:\\文档\\技术手册.pdf - 技术文档",
+            
+            # 代码类型内容
             "def hello_world():\n    print('Hello, World!')\n    return True - 代码片段",
-            "重要的会议记录：明天下午2点开会，讨论项目进展",
-            "购物清单：牛奶、面包、鸡蛋、水果、蔬菜",
+            "class Calculator:\n    def add(self, a, b):\n        return a + b\n    def multiply(self, a, b):\n        return a * b - 计算器类",
+            "async def fetch_data(url):\n    async with aiohttp.ClientSession() as session:\n        async with session.get(url) as response:\n            return await response.text() - 异步函数",
+            "def quick_sort(arr):\n    if len(arr) <= 1:\n        return arr\n    pivot = arr[len(arr) // 2]\n    left = [x for x in arr if x < pivot]\n    middle = [x for x in arr if x == pivot]\n    right = [x for x in arr if x > pivot]\n    return quick_sort(left) + middle + quick_sort(right) - 快速排序算法",
+            "import os\nimport sys\n\ndef main():\n    print('Hello from Python!')\n    return 0\n\nif __name__ == '__main__':\n    main() - 主程序入口",
+            "def fibonacci(n):\n    if n <= 1:\n        return n\n    return fibonacci(n-1) + fibonacci(n-2) - 斐波那契数列",
+            "class Database:\n    def __init__(self, connection_string):\n        self.connection_string = connection_string\n    def connect(self):\n        # 连接数据库\n        pass - 数据库类",
+            "def validate_email(email):\n    import re\n    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$'\n    return re.match(pattern, email) is not None - 邮箱验证函数",
+            "def read_file(file_path):\n    try:\n        with open(file_path, 'r', encoding='utf-8') as f:\n            return f.read()\n    except FileNotFoundError:\n        return None - 文件读取函数",
+            "def send_email(to, subject, body):\n    import smtplib\n    from email.mime.text import MIMEText\n    msg = MIMEText(body)\n    msg['Subject'] = subject\n    msg['From'] = 'sender@example.com'\n    msg['To'] = to - 邮件发送函数",
+            
+            # 联系信息类型
             "电话号码：123-456-7890 - 联系人信息",
             "邮箱地址：test@example.com - 邮箱",
-            "项目进度：第一阶段已完成，开始第二阶段开发",
-            "待办事项：1. 完成文档 2. 测试功能 3. 部署应用"
+            "微信：wechat_id_123 - 微信联系方式",
+            "QQ：123456789 - QQ号码",
+            "地址：北京市朝阳区某某街道123号 - 联系地址",
+            "公司电话：010-12345678 - 公司联系方式",
+            "紧急联系人：张三 138-0000-0000 - 紧急联系信息",
+            "客户邮箱：customer@company.com - 客户联系方式",
+            "技术支持：support@tech.com - 技术支持邮箱",
+            "招聘邮箱：hr@company.com - 人力资源邮箱",
         ]
         
         for i, content in enumerate(test_items):
             item = ClipboardItem(id="", content=content)
             self.clipboard_manager._add_item(item)
         
-        self.status_label.setText(f"已添加 {len(test_items)} 个测试项目")
+        self.status_label.setText(f"✅ 已添加 {len(test_items)} 个测试项目 - 现在可以测试滚动条功能了")
     
     def on_item_selected(self, item):
         """项目被选中"""
