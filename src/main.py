@@ -8,6 +8,7 @@ Paste for Windows - 主应用程序
 import sys
 import os
 from pathlib import Path
+import time # Added for retry mechanism
 
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel
 from PyQt6.QtCore import Qt, QTimer
@@ -258,19 +259,48 @@ class MainWindow(QMainWindow):
         import win32con
         
         try:
-            win32clipboard.OpenClipboard()
-            win32clipboard.EmptyClipboard()
-            win32clipboard.SetClipboardData(win32con.CF_UNICODETEXT, item.content)
-            win32clipboard.CloseClipboard()
+            # 多次尝试设置剪贴板内容
+            success = False
+            for attempt in range(3):
+                try:
+                    # 等待一下再尝试
+                    if attempt > 0:
+                        time.sleep(0.1)
+                    
+                    win32clipboard.OpenClipboard()
+                    win32clipboard.EmptyClipboard()
+                    win32clipboard.SetClipboardData(win32con.CF_UNICODETEXT, item.content)
+                    win32clipboard.CloseClipboard()
+                    success = True
+                    break
+                    
+                except Exception as e:
+                    print(f"复制到剪贴板失败，尝试 {attempt + 1}/3: {e}")
+                    # 确保剪贴板被关闭
+                    try:
+                        win32clipboard.CloseClipboard()
+                    except:
+                        pass
             
-            # 显示通知
-            self.system_tray.show_message(
-                "已复制到剪贴板",
-                f"自动上屏失败，已复制到剪贴板：{item.content[:50]}{'...' if len(item.content) > 50 else ''}\n请手动粘贴"
-            )
+            if success:
+                # 显示成功通知
+                self.system_tray.show_message(
+                    "已复制到剪贴板",
+                    f"自动上屏失败，已复制到剪贴板：{item.content[:50]}{'...' if len(item.content) > 50 else ''}\n请手动粘贴"
+                )
+            else:
+                # 显示失败通知
+                self.system_tray.show_message(
+                    "复制失败",
+                    f"无法复制内容到剪贴板，请手动复制：{item.content[:50]}{'...' if len(item.content) > 50 else ''}"
+                )
             
         except Exception as e:
             print(f"复制到剪贴板失败: {e}")
+            self.system_tray.show_message(
+                "错误",
+                f"剪贴板操作失败: {str(e)}"
+            )
     
     def _on_error(self, error_message: str):
         """错误处理"""

@@ -14,6 +14,8 @@ from dataclasses import dataclass, field
 
 import win32clipboard
 import win32con
+import win32gui
+import win32api
 from PyQt6.QtCore import QObject, pyqtSignal, QTimer, QThread
 from PyQt6.QtWidgets import QApplication
 
@@ -70,7 +72,7 @@ class ClipboardItem:
 
 
 class ClipboardListener(QObject):
-    """剪贴板监听器"""
+    """剪贴板监听器 - 使用Windows消息机制"""
     
     # 信号定义
     clipboard_changed = pyqtSignal(ClipboardItem)  # 剪贴板内容变化
@@ -80,57 +82,35 @@ class ClipboardListener(QObject):
         super().__init__(parent)
         self._last_content = ""
         self._is_listening = False
-        self._timer = QTimer()
-        self._timer.timeout.connect(self._check_clipboard)
-        self._check_interval = 100  # 检查间隔（毫秒）
+        self._listener_thread = None
+        self._hwnd = None
+        self._clipboard_viewer_next = None
         
     def start_listening(self):
         """开始监听剪贴板"""
         if not self._is_listening:
             self._is_listening = True
-            self._timer.start(self._check_interval)
-            print("剪贴板监听已启动")
+            self._listener_thread = ClipboardListenerThread(self)
+            self._listener_thread.clipboard_changed.connect(self._on_clipboard_changed)
+            self._listener_thread.error_occurred.connect(self.clipboard_error.emit)
+            self._listener_thread.start()
+            print("剪贴板监听已启动（使用Windows消息机制）")
     
     def stop_listening(self):
         """停止监听剪贴板"""
         if self._is_listening:
             self._is_listening = False
-            self._timer.stop()
+            if self._listener_thread:
+                self._listener_thread.stop()
+                self._listener_thread.wait()
+                self._listener_thread = None
             print("剪贴板监听已停止")
     
-    def _check_clipboard(self):
-        """检查剪贴板内容"""
-        try:
-            # 打开剪贴板
-            if not win32clipboard.OpenClipboard():
-                return
-            
-            try:
-                # 检查是否有文本内容
-                if win32clipboard.IsClipboardFormatAvailable(win32con.CF_UNICODETEXT):
-                    content = win32clipboard.GetClipboardData(win32con.CF_UNICODETEXT)
-                elif win32clipboard.IsClipboardFormatAvailable(win32con.CF_TEXT):
-                    content = win32clipboard.GetClipboardData(win32con.CF_TEXT).decode('utf-8')
-                else:
-                    content = ""
-                
-                # 检查内容是否发生变化
-                if content and content != self._last_content:
-                    self._last_content = content
-                    self._process_clipboard_content(content)
-                    
-            finally:
-                # 确保关闭剪贴板
-                try:
-                    win32clipboard.CloseClipboard()
-                except:
-                    pass
-                
-        except Exception as e:
-            # 减少错误日志频率，避免刷屏
-            if not hasattr(self, '_last_error_time') or time.time() - self._last_error_time > 5:
-                self.clipboard_error.emit(f"剪贴板访问错误: {str(e)}")
-                self._last_error_time = time.time()
+    def _on_clipboard_changed(self, content: str):
+        """处理剪贴板变化"""
+        if content and content != self._last_content:
+            self._last_content = content
+            self._process_clipboard_content(content)
     
     def _process_clipboard_content(self, content: str):
         """处理剪贴板内容"""
@@ -170,10 +150,146 @@ class ClipboardListener(QObject):
         return "text"
     
     def set_check_interval(self, interval: int):
-        """设置检查间隔"""
-        self._check_interval = interval
-        if self._is_listening:
-            self._timer.setInterval(interval)
+        """设置检查间隔（兼容性方法，实际不使用）"""
+        pass
+
+
+class ClipboardListenerThread(QThread):
+    """剪贴板监听线程 - 使用Windows消息机制"""
+    
+    # 信号定义
+    clipboard_changed = pyqtSignal(str)  # 剪贴板内容变化
+    error_occurred = pyqtSignal(str)  # 错误信号
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._is_running = False
+        self._hwnd = None
+        self._clipboard_viewer_next = None
+        
+    def run(self):
+        """运行监听线程"""
+        try:
+            self._is_running = True
+            
+            # 创建隐藏窗口来接收剪贴板消息
+            self._hwnd = win32gui.CreateWindowEx(
+                0, "STATIC", "ClipboardListener",
+                0, 0, 0, 0, 0, 0, 0, None
+            )
+            
+            if not self._hwnd:
+                self.error_occurred.emit("无法创建剪贴板监听窗口")
+                return
+            
+            # 注册为剪贴板查看器
+            self._clipboard_viewer_next = win32gui.SetClipboardViewer(self._hwnd)
+            
+            print("✅ 剪贴板监听窗口已创建，开始监听...")
+            
+            # 消息循环
+            while self._is_running:
+                try:
+                    # 处理Windows消息
+                    msg = win32gui.GetMessage(None, 0, 0)
+                    
+                    if msg[0] == 0:  # WM_QUIT
+                        break
+                    
+                    if msg[0] == win32con.WM_CHANGECBCHAIN:
+                        # 剪贴板查看器链变化
+                        if msg[1] == self._hwnd:
+                            self._clipboard_viewer_next = msg[2]
+                        elif self._clipboard_viewer_next:
+                            win32gui.SendMessage(self._clipboard_viewer_next, msg[0], msg[1], msg[2])
+                    
+                    elif msg[0] == win32con.WM_DRAWCLIPBOARD:
+                        # 剪贴板内容变化
+                        self._handle_clipboard_change()
+                        
+                        # 传递消息给下一个查看器
+                        if self._clipboard_viewer_next:
+                            win32gui.SendMessage(self._clipboard_viewer_next, msg[0], msg[1], msg[2])
+                    
+                    else:
+                        # 其他消息
+                        win32gui.TranslateMessage(msg)
+                        win32gui.DispatchMessage(msg)
+                        
+                except Exception as e:
+                    if self._is_running:
+                        self.error_occurred.emit(f"消息处理错误: {str(e)}")
+                    break
+                    
+        except Exception as e:
+            self.error_occurred.emit(f"剪贴板监听线程错误: {str(e)}")
+        finally:
+            self._cleanup()
+    
+    def _handle_clipboard_change(self):
+        """处理剪贴板变化"""
+        try:
+            # 延迟一下，确保剪贴板内容已更新
+            time.sleep(0.05)
+            
+            # 获取剪贴板内容
+            content = self._get_clipboard_content_safe()
+            if content:
+                self.clipboard_changed.emit(content)
+                
+        except Exception as e:
+            if self._is_running:
+                self.error_occurred.emit(f"处理剪贴板变化错误: {str(e)}")
+    
+    def _get_clipboard_content_safe(self) -> Optional[str]:
+        """安全地获取剪贴板内容"""
+        try:
+            # 尝试打开剪贴板，如果失败则返回None
+            if not win32clipboard.OpenClipboard():
+                return None
+            
+            try:
+                # 检查是否有文本内容
+                if win32clipboard.IsClipboardFormatAvailable(win32con.CF_UNICODETEXT):
+                    content = win32clipboard.GetClipboardData(win32con.CF_UNICODETEXT)
+                elif win32clipboard.IsClipboardFormatAvailable(win32con.CF_TEXT):
+                    content = win32clipboard.GetClipboardData(win32con.CF_TEXT).decode('utf-8')
+                else:
+                    content = ""
+                
+                return content
+                
+            finally:
+                # 确保关闭剪贴板
+                try:
+                    win32clipboard.CloseClipboard()
+                except:
+                    pass
+                    
+        except Exception:
+            # 如果出现任何异常，返回None而不是抛出异常
+            return None
+    
+    def stop(self):
+        """停止监听"""
+        self._is_running = False
+        self._cleanup()
+    
+    def _cleanup(self):
+        """清理资源"""
+        try:
+            if self._hwnd:
+                # 从剪贴板查看器链中移除
+                if self._clipboard_viewer_next:
+                    win32gui.ChangeClipboardChain(self._hwnd, self._clipboard_viewer_next)
+                
+                # 销毁窗口
+                win32gui.DestroyWindow(self._hwnd)
+                self._hwnd = None
+                self._clipboard_viewer_next = None
+                
+        except Exception as e:
+            print(f"清理剪贴板监听资源时出错: {e}")
 
 
 class ClipboardManager(QObject):
@@ -229,17 +345,13 @@ class ClipboardManager(QObject):
     
     def _add_item(self, item: ClipboardItem):
         """添加新项目"""
-        try:
-            # 检查项目数量限制
-            if len(self._items) >= self._max_items:
-                self._remove_oldest_item()
-            
-            # 添加项目
-            self._items[item.id] = item
-            self.item_added.emit(item)
-            
-        except Exception as e:
-            self.error_occurred.emit(f"添加项目错误: {str(e)}")
+        # 检查是否超过最大项目数
+        if len(self._items) >= self._max_items:
+            self._remove_oldest_item()
+        
+        # 添加新项目
+        self._items[item.id] = item
+        self.item_added.emit(item)
     
     def _remove_oldest_item(self):
         """移除最旧的项目"""
@@ -248,7 +360,7 @@ class ClipboardManager(QObject):
         
         # 找到最旧的项目
         oldest_item = min(self._items.values(), key=lambda x: x.created_at)
-        self._items.pop(oldest_item.id)
+        del self._items[oldest_item.id]
         self.item_removed.emit(oldest_item.id)
     
     def _find_item_by_content(self, content: str) -> Optional[ClipboardItem]:
@@ -259,7 +371,7 @@ class ClipboardManager(QObject):
         return None
     
     def get_item(self, item_id: str) -> Optional[ClipboardItem]:
-        """获取指定项目"""
+        """根据ID获取项目"""
         return self._items.get(item_id)
     
     def get_all_items(self) -> list[ClipboardItem]:
@@ -268,11 +380,11 @@ class ClipboardManager(QObject):
     
     def get_recent_items(self, limit: int = 50) -> list[ClipboardItem]:
         """获取最近的项目"""
-        items = sorted(self._items.values(), key=lambda x: x.updated_at, reverse=True)
-        return items[:limit]
+        sorted_items = sorted(self._items.values(), key=lambda x: x.created_at, reverse=True)
+        return sorted_items[:limit]
     
     def remove_item(self, item_id: str) -> bool:
-        """删除指定项目"""
+        """移除项目"""
         if item_id in self._items:
             del self._items[item_id]
             self.item_removed.emit(item_id)
@@ -289,31 +401,35 @@ class ClipboardManager(QObject):
     def set_max_items(self, max_items: int):
         """设置最大项目数"""
         self._max_items = max_items
-        # 如果当前项目数超过限制，移除多余的项目
+        # 如果当前项目数超过新的最大值，移除多余的项目
         while len(self._items) > self._max_items:
             self._remove_oldest_item()
     
     def search_items(self, query: str, limit: int = 50) -> List[ClipboardItem]:
         """搜索项目"""
-        results = []
+        if not query.strip():
+            return self.get_recent_items(limit)
+        
         query_lower = query.lower()
+        results = []
         
         for item in self._items.values():
-            if (query_lower in item.content.lower() or 
-                query_lower in item.tags.lower()):
+            if query_lower in item.content.lower():
                 results.append(item)
+                if len(results) >= limit:
+                    break
         
-        # 按更新时间排序
-        results.sort(key=lambda x: x.updated_at, reverse=True)
-        return results[:limit]
+        return results
     
     def get_stats(self) -> Dict[str, Any]:
         """获取统计信息"""
+        total_items = len(self._items)
+        content_types = self._get_content_type_stats()
+        
         return {
-            'total_items': len(self._items),
-            'max_items': self._max_items,
-            'is_enabled': self._is_enabled,
-            'content_types': self._get_content_type_stats()
+            'total_items': total_items,
+            'content_types': content_types,
+            'is_enabled': self._is_enabled
         }
     
     def _get_content_type_stats(self) -> Dict[str, int]:

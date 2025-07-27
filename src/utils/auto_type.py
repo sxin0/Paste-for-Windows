@@ -75,18 +75,32 @@ class AutoTypeManager:
             original_clipboard = self._get_clipboard_content()
             
             # 将文本复制到剪贴板
-            self._set_clipboard_content(text)
+            success = self._set_clipboard_content(text)
+            if not success:
+                print("设置剪贴板失败")
+                return False
             
             # 等待一下确保剪贴板内容已更新
-            time.sleep(0.05)
+            time.sleep(0.1)  # 增加等待时间
             
             # 模拟 Ctrl+V 粘贴
             pyautogui.hotkey('ctrl', 'v')
             
+            # 等待粘贴完成
+            time.sleep(0.2)  # 增加等待时间
+            
             # 恢复原始剪贴板内容
             if original_clipboard is not None:
-                time.sleep(0.1)  # 等待粘贴完成
-                self._set_clipboard_content(original_clipboard)
+                # 多次尝试恢复剪贴板内容
+                for attempt in range(3):
+                    try:
+                        time.sleep(0.1)  # 等待一下再恢复
+                        self._set_clipboard_content(original_clipboard)
+                        break
+                    except Exception as e:
+                        print(f"恢复剪贴板内容失败，尝试 {attempt + 1}/3: {e}")
+                        if attempt == 2:  # 最后一次尝试
+                            print("无法恢复原始剪贴板内容")
             
             return True
             
