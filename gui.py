@@ -41,8 +41,8 @@ class ClipboardGUI:
         # 绑定事件
         self.bind_events()
         
-        # 加载历史记录
-        self.load_history()
+        # 延迟加载历史记录，避免在窗口创建时卡住
+        self.root.after(100, self.load_history)
         
         # 添加剪贴板变化回调
         self.clipboard_manager.add_callback(self.on_clipboard_change)
@@ -175,11 +175,18 @@ class ClipboardGUI:
     def load_history(self):
         """加载历史记录"""
         try:
+            print("开始加载历史记录...")
             self.history_data = self.clipboard_manager.get_history()
+            print(f"历史记录加载完成，共 {len(self.history_data)} 条记录")
             self.update_history_display()
             self.update_status(f"已加载 {len(self.history_data)} 条记录")
         except Exception as e:
-            messagebox.showerror("错误", f"加载历史记录失败: {e}")
+            print(f"加载历史记录失败: {e}")
+            import traceback
+            traceback.print_exc()
+            # 不显示错误对话框，避免阻塞
+            self.history_data = []
+            self.update_status("历史记录加载失败")
     
     def update_history_display(self, data=None):
         """更新历史记录显示"""

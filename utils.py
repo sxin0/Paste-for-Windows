@@ -73,12 +73,17 @@ class SystemTray:
     
     def show_main_window(self, icon=None, item=None):
         """显示主窗口"""
+        print("系统托盘：显示主窗口被点击")
+        sys.stdout.flush()
+        
         if self.app_instance:
             # 通过命令队列发送显示窗口命令
+            print("通过命令队列发送toggle_window命令")
             self.app_instance.command_queue.put('toggle_window')
         elif hasattr(self.main_app, 'root') and self.main_app.root:
             # 备用方法：直接操作GUI（仅在主线程中安全）
             try:
+                print("直接操作GUI显示窗口")
                 self.main_app.root.after(0, lambda: (
                     self.main_app.root.deiconify(),
                     self.main_app.root.lift(),
@@ -86,25 +91,53 @@ class SystemTray:
                 ))
             except Exception as e:
                 print(f"显示主窗口失败: {e}")
+        else:
+            print("无法显示主窗口：app_instance和main_app.root都不存在")
     
     def show_settings(self, icon=None, item=None):
         """显示设置"""
+        print("系统托盘：显示设置被点击")
+        sys.stdout.flush()
+        
         if self.app_instance:
-            # 确保主窗口存在
-            if not hasattr(self.main_app, 'root') or not self.main_app.root:
+            print("app_instance存在，检查主窗口状态")
+            sys.stdout.flush()
+            
+            # 检查主窗口是否存在且可见
+            main_window_exists = hasattr(self.main_app, 'root') and self.main_app.root
+            main_window_visible = False
+            
+            if main_window_exists:
+                try:
+                    main_window_visible = self.main_app.root.winfo_viewable()
+                    print(f"主窗口存在，可见状态: {main_window_visible}")
+                except Exception as e:
+                    print(f"检查主窗口可见状态失败: {e}")
+                    main_window_visible = False
+            
+            if not main_window_exists or not main_window_visible:
+                print("主窗口不存在或不可见，先显示主窗口，然后延迟打开设置")
+                sys.stdout.flush()
                 # 如果主窗口不存在，先显示主窗口，然后延迟打开设置
                 self.app_instance.command_queue.put('toggle_window')
                 # 使用线程延迟执行设置命令
                 import threading
                 import time
                 def delayed_settings():
-                    time.sleep(0.5)  # 等待主窗口创建
+                    time.sleep(1.0)  # 增加等待时间，确保主窗口完全显示
                     if self.app_instance:
+                        print("延迟发送open_settings命令")
+                        sys.stdout.flush()
                         self.app_instance.command_queue.put('open_settings')
                 threading.Thread(target=delayed_settings, daemon=True).start()
             else:
+                print("主窗口已存在且可见，直接发送设置命令")
+                sys.stdout.flush()
                 # 主窗口已存在，直接发送设置命令
                 self.app_instance.command_queue.put('open_settings')
+        else:
+            print("❌ app_instance不存在，无法打开设置")
+            sys.stdout.flush()
     
     def show_statistics(self, icon=None, item=None):
         """显示统计信息"""
