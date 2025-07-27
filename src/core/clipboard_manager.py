@@ -94,7 +94,7 @@ class ClipboardListener(QObject):
             self._listener_thread.clipboard_changed.connect(self._on_clipboard_changed)
             self._listener_thread.error_occurred.connect(self.clipboard_error.emit)
             self._listener_thread.start()
-            print("剪贴板监听已启动（使用Windows消息机制）")
+            print("✅ 剪贴板监听已启动（使用Windows消息机制）")
     
     def stop_listening(self):
         """停止监听剪贴板"""
@@ -104,7 +104,7 @@ class ClipboardListener(QObject):
                 self._listener_thread.stop()
                 self._listener_thread.wait()
                 self._listener_thread = None
-            print("剪贴板监听已停止")
+            print("✅ 剪贴板监听已停止")
     
     def _on_clipboard_changed(self, content: str):
         """处理剪贴板变化"""
@@ -124,6 +124,8 @@ class ClipboardListener(QObject):
             
             # 发送信号
             self.clipboard_changed.emit(item)
+            
+            print(f"📋 监听到新的剪贴板内容: {content[:50]}{'...' if len(content) > 50 else ''}")
             
         except Exception as e:
             self.clipboard_error.emit(f"处理剪贴板内容错误: {str(e)}")
@@ -166,6 +168,7 @@ class ClipboardListenerThread(QThread):
         self._is_running = False
         self._hwnd = None
         self._clipboard_viewer_next = None
+        self._last_content = ""
         
     def run(self):
         """运行监听线程"""
@@ -175,7 +178,7 @@ class ClipboardListenerThread(QThread):
             # 创建隐藏窗口来接收剪贴板消息
             self._hwnd = win32gui.CreateWindowEx(
                 0, "STATIC", "ClipboardListener",
-                0, 0, 0, 0, 0, 0, 0, None
+                0, 0, 0, 0, 0, 0, 0, None, None
             )
             
             if not self._hwnd:
@@ -234,8 +237,10 @@ class ClipboardListenerThread(QThread):
             
             # 获取剪贴板内容
             content = self._get_clipboard_content_safe()
-            if content:
+            if content and content != self._last_content:
+                self._last_content = content
                 self.clipboard_changed.emit(content)
+                print(f"📋 检测到剪贴板变化: {content[:30]}{'...' if len(content) > 30 else ''}")
                 
         except Exception as e:
             if self._is_running:
@@ -243,32 +248,44 @@ class ClipboardListenerThread(QThread):
     
     def _get_clipboard_content_safe(self) -> Optional[str]:
         """安全地获取剪贴板内容"""
-        try:
-            # 尝试打开剪贴板，如果失败则返回None
-            if not win32clipboard.OpenClipboard():
-                return None
-            
+        # 多次尝试打开剪贴板
+        for attempt in range(3):
             try:
-                # 检查是否有文本内容
-                if win32clipboard.IsClipboardFormatAvailable(win32con.CF_UNICODETEXT):
-                    content = win32clipboard.GetClipboardData(win32con.CF_UNICODETEXT)
-                elif win32clipboard.IsClipboardFormatAvailable(win32con.CF_TEXT):
-                    content = win32clipboard.GetClipboardData(win32con.CF_TEXT).decode('utf-8')
+                # 尝试打开剪贴板
+                if win32clipboard.OpenClipboard():
+                    try:
+                        # 检查是否有文本内容
+                        if win32clipboard.IsClipboardFormatAvailable(win32con.CF_UNICODETEXT):
+                            content = win32clipboard.GetClipboardData(win32con.CF_UNICODETEXT)
+                            return content
+                        elif win32clipboard.IsClipboardFormatAvailable(win32con.CF_TEXT):
+                            content = win32clipboard.GetClipboardData(win32con.CF_TEXT).decode('utf-8')
+                            return content
+                        else:
+                            return ""
+                    finally:
+                        # 确保关闭剪贴板
+                        try:
+                            win32clipboard.CloseClipboard()
+                        except:
+                            pass
                 else:
-                    content = ""
-                
-                return content
-                
-            finally:
-                # 确保关闭剪贴板
-                try:
-                    win32clipboard.CloseClipboard()
-                except:
-                    pass
-                    
-        except Exception:
-            # 如果出现任何异常，返回None而不是抛出异常
-            return None
+                    # 如果无法打开剪贴板，等待一下再重试
+                    if attempt < 2:  # 不是最后一次尝试
+                        time.sleep(0.05)
+                        continue
+                    else:
+                        return None
+                        
+            except Exception as e:
+                # 如果出现异常，等待一下再重试
+                if attempt < 2:  # 不是最后一次尝试
+                    time.sleep(0.05)
+                    continue
+                else:
+                    return None
+        
+        return None
     
     def stop(self):
         """停止监听"""
@@ -307,24 +324,29 @@ class ClipboardManager(QObject):
         self._items: Dict[str, ClipboardItem] = {}
         self._max_items = 1000  # 最大项目数
         self._is_enabled = False
+        self._database_manager = None  # 数据库管理器
         
         # 连接信号
         self._listener.clipboard_changed.connect(self._on_clipboard_changed)
         self._listener.clipboard_error.connect(self.error_occurred.emit)
+    
+    def set_database_manager(self, database_manager):
+        """设置数据库管理器"""
+        self._database_manager = database_manager
     
     def start(self):
         """启动剪贴板管理器"""
         if not self._is_enabled:
             self._is_enabled = True
             self._listener.start_listening()
-            print("剪贴板管理器已启动")
+            print("✅ 剪贴板管理器已启动")
     
     def stop(self):
         """停止剪贴板管理器"""
         if self._is_enabled:
             self._is_enabled = False
             self._listener.stop_listening()
-            print("剪贴板管理器已停止")
+            print("✅ 剪贴板管理器已停止")
     
     def _on_clipboard_changed(self, item: ClipboardItem):
         """处理剪贴板变化"""
@@ -336,9 +358,21 @@ class ClipboardManager(QObject):
                 # 更新现有项目
                 existing_item.update_access()
                 self.item_updated.emit(existing_item)
+                
+                # 保存到数据库
+                if self._database_manager:
+                    self._database_manager.save_item(existing_item)
+                    
+                print(f"🔄 更新现有剪贴板项目: {item.content[:30]}{'...' if len(item.content) > 30 else ''}")
             else:
                 # 添加新项目
                 self._add_item(item)
+                
+                # 保存到数据库
+                if self._database_manager:
+                    self._database_manager.save_item(item)
+                    
+                print(f"📝 新增剪贴板项目: {item.content[:30]}{'...' if len(item.content) > 30 else ''}")
                 
         except Exception as e:
             self.error_occurred.emit(f"处理剪贴板变化错误: {str(e)}")
@@ -352,6 +386,8 @@ class ClipboardManager(QObject):
         # 添加新项目
         self._items[item.id] = item
         self.item_added.emit(item)
+        
+        print(f"✅ 剪贴板项目已添加到内存: {item.content_type} 类型")
     
     def _remove_oldest_item(self):
         """移除最旧的项目"""
@@ -362,6 +398,10 @@ class ClipboardManager(QObject):
         oldest_item = min(self._items.values(), key=lambda x: x.created_at)
         del self._items[oldest_item.id]
         self.item_removed.emit(oldest_item.id)
+        
+        # 从数据库中也删除
+        if self._database_manager:
+            self._database_manager.delete_item(oldest_item.id)
     
     def _find_item_by_content(self, content: str) -> Optional[ClipboardItem]:
         """根据内容查找项目"""
@@ -388,6 +428,11 @@ class ClipboardManager(QObject):
         if item_id in self._items:
             del self._items[item_id]
             self.item_removed.emit(item_id)
+            
+            # 从数据库中也删除
+            if self._database_manager:
+                self._database_manager.delete_item(item_id)
+                
             return True
         return False
     
@@ -397,6 +442,10 @@ class ClipboardManager(QObject):
         self._items.clear()
         for item_id in item_ids:
             self.item_removed.emit(item_id)
+        
+        # 清空数据库
+        if self._database_manager:
+            self._database_manager.clear_all_items()
     
     def set_max_items(self, max_items: int):
         """设置最大项目数"""
@@ -438,4 +487,26 @@ class ClipboardManager(QObject):
         for item in self._items.values():
             content_type = item.content_type
             stats[content_type] = stats.get(content_type, 0) + 1
-        return stats 
+        return stats
+    
+    def load_from_database(self):
+        """从数据库加载项目"""
+        if not self._database_manager:
+            return
+        
+        try:
+            # 从数据库获取最近的项目
+            db_items = self._database_manager.get_recent_items(self._max_items)
+            
+            # 清空当前内存中的项目
+            self._items.clear()
+            
+            # 加载数据库中的项目
+            for item in db_items:
+                self._items[item.id] = item
+            
+            print(f"✅ 从数据库加载了 {len(db_items)} 个剪贴板项目")
+            
+        except Exception as e:
+            print(f"❌ 从数据库加载项目失败: {e}")
+            self.error_occurred.emit(f"从数据库加载项目失败: {str(e)}") 

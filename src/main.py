@@ -142,6 +142,12 @@ class MainWindow(QMainWindow):
         # 剪贴板管理器
         self.clipboard_manager = ClipboardManager()
         
+        # 设置剪贴板管理器与数据库管理器的关联
+        self.clipboard_manager.set_database_manager(self.database_manager)
+        
+        # 从数据库加载历史项目
+        self.clipboard_manager.load_from_database()
+        
         # 系统托盘
         self.system_tray = SystemTray(self.clipboard_manager)
         
@@ -205,11 +211,60 @@ class MainWindow(QMainWindow):
     
     def _on_item_selected(self, item):
         """项目被选中"""
-        # 单击选中：只显示通知，不复制到剪贴板
-        self.system_tray.show_message(
-            "项目已选中",
-            f"已选中：{item.content[:50]}{'...' if len(item.content) > 50 else ''}\n双击可复制到剪贴板"
-        )
+        # 单击选中：复制内容到剪贴板
+        import win32clipboard
+        import win32con
+        import time
+        
+        try:
+            # 多次尝试设置剪贴板内容
+            success = False
+            for attempt in range(3):
+                try:
+                    # 等待一下再尝试
+                    if attempt > 0:
+                        time.sleep(0.1)
+                    
+                    win32clipboard.OpenClipboard()
+                    win32clipboard.EmptyClipboard()
+                    win32clipboard.SetClipboardData(win32con.CF_UNICODETEXT, item.content)
+                    win32clipboard.CloseClipboard()
+                    success = True
+                    break
+                    
+                except Exception as e:
+                    print(f"复制到剪贴板失败，尝试 {attempt + 1}/3: {e}")
+                    # 确保剪贴板被关闭
+                    try:
+                        win32clipboard.CloseClipboard()
+                    except:
+                        pass
+            
+            if success:
+                # 更新访问次数
+                item.update_access()
+                
+                # 发送更新信号，触发数据库保存
+                self.clipboard_manager.item_updated.emit(item)
+                
+                # 显示成功通知
+                self.system_tray.show_message(
+                    "已复制到剪贴板",
+                    f"内容已复制：{item.content[:50]}{'...' if len(item.content) > 50 else ''}\n双击可自动上屏"
+                )
+            else:
+                # 显示失败通知
+                self.system_tray.show_message(
+                    "复制失败",
+                    f"无法复制内容到剪贴板，请手动复制：{item.content[:50]}{'...' if len(item.content) > 50 else ''}"
+                )
+            
+        except Exception as e:
+            print(f"复制到剪贴板失败: {e}")
+            self.system_tray.show_message(
+                "错误",
+                f"剪贴板操作失败: {str(e)}"
+            )
     
     def _on_item_double_clicked(self, item):
         """项目双击 - 自动上屏（Windows 11 风格）"""
