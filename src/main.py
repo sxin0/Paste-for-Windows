@@ -200,7 +200,7 @@ class MainWindow(QMainWindow):
         )
     
     def _on_item_double_clicked(self, item):
-        """项目双击 - 自动上屏"""
+        """项目双击 - 自动上屏（Windows 11 风格）"""
         # 导入自动上屏管理器
         from src.utils.auto_type import auto_type_manager
         
@@ -213,26 +213,15 @@ class MainWindow(QMainWindow):
                 self._fallback_to_clipboard(item)
                 return
             
-            # 获取当前窗口信息（剪贴板历史窗口）
+            # 获取当前激活窗口信息
             current_window = auto_type_manager.get_active_window_info()
             current_title = current_window.get("title", "未知窗口")
-            print(f"当前窗口: {current_title}")
+            print(f"当前激活窗口: {current_title}")
             
-            # 查找目标窗口（确认窗口是否还存在）
-            target_window = auto_type_manager.find_best_target_window()
-            if not target_window:
-                print("❌ 没有找到合适的目标窗口，回退到剪贴板方式")
-                self._fallback_to_clipboard(item)
-                return
-            
-            target_title = target_window.get("title", "未知窗口")
-            print(f"目标窗口: {target_title}")
-            
-            # 执行自动上屏（切换到目标窗口并输入内容）
+            # 直接在当前激活窗口输入内容（Windows 11 风格）
             success = auto_type_manager.type_text(
                 item.content, 
-                method="clipboard", 
-                switch_to_previous=True
+                method="clipboard"
             )
             
             if success:
@@ -240,7 +229,7 @@ class MainWindow(QMainWindow):
                 # 显示成功通知
                 self.system_tray.show_message(
                     "自动上屏成功",
-                    f"已切换到：{target_title}\n已输入内容：{item.content[:50]}{'...' if len(item.content) > 50 else ''}"
+                    f"已输入内容到：{current_title}\n内容：{item.content[:50]}{'...' if len(item.content) > 50 else ''}"
                 )
             else:
                 print("❌ 自动上屏失败，回退到剪贴板方式")
