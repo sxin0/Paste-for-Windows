@@ -32,7 +32,7 @@ class AppConfig:
     window_x: int = -1  # -1 表示居中
     window_y: int = -1  # -1 表示居中
     theme: str = "auto"  # auto, light, dark
-    opacity: float = 0.95
+    opacity: float = 1.0
     
     # 快捷键设置
     show_window_hotkey: str = "Win+V"

@@ -100,7 +100,7 @@ class MainWindow(QMainWindow):
                 color: #323130;
                 line-height: 1.5;
                 padding: 20px;
-                background: rgba(255, 255, 255, 0.8);
+                background: rgb(255, 255, 255);
                 border-radius: 8px;
                 border: 1px solid rgba(0, 0, 0, 0.1);
             }
@@ -117,8 +117,8 @@ class MainWindow(QMainWindow):
         self.setStyleSheet("""
             QMainWindow {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                          stop:0 rgba(255,255,255,0.95),
-                                          stop:1 rgba(255,255,255,0.85));
+                                          stop:0 rgb(255,255,255),
+                                          stop:1 rgb(255,255,255));
             }
         """)
     
@@ -158,7 +158,7 @@ class MainWindow(QMainWindow):
         self.system_tray.show_window_requested.connect(self.show_main_window)
         self.system_tray.show_bottom_panel_requested.connect(self.show_bottom_panel)
         self.system_tray.toggle_bottom_panel_requested.connect(self.toggle_bottom_panel)
-        self.system_tray.quit_requested.connect(self.close)
+        self.system_tray.quit_requested.connect(self.quit_application)
         
         # 底部面板信号
         self.bottom_panel.item_selected.connect(self._on_item_selected)
@@ -283,6 +283,28 @@ class MainWindow(QMainWindow):
             self.bottom_panel.hide_panel()
         else:
             self.bottom_panel.show_panel()
+    
+    def quit_application(self):
+        """退出应用程序"""
+        # 显示确认对话框
+        from PyQt6.QtWidgets import QMessageBox
+        
+        reply = QMessageBox.question(
+            self,
+            "确认退出",
+            "确定要退出 Paste for Windows 吗？\n\n退出后剪贴板监听将停止。",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+        
+        if reply == QMessageBox.StandardButton.Yes:
+            # 清理资源
+            self.clipboard_manager.stop()
+            self.database_manager.close()
+            self.system_tray.hide()
+            
+            # 退出应用程序
+            QApplication.quit()
     
     def closeEvent(self, event):
         """关闭事件"""

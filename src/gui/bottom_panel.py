@@ -53,8 +53,8 @@ class BottomPanel(QWidget):
         )
         
         # 设置属性
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground)
+        # self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        # self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground)
         
         # 主布局
         main_layout = QVBoxLayout(self)
@@ -66,10 +66,10 @@ class BottomPanel(QWidget):
         self.content_widget.setObjectName("contentWidget")
         self.content_widget.setStyleSheet("""
             QWidget#contentWidget {
-                background: rgba(255, 255, 255, 0.8);
+                background: rgb(255, 255, 255);
                 border-top-left-radius: 12px;
                 border-top-right-radius: 12px;
-                border: 1px solid rgba(255, 255, 255, 0.3);
+                border: 1px solid rgba(0, 0, 0, 0.1);
             }
         """)
         
@@ -123,13 +123,13 @@ class BottomPanel(QWidget):
                 border-radius: 18px;
                 padding: 8px 16px;
                 font-size: 14px;
-                background: rgba(255, 255, 255, 0.8);
+                background: rgb(255, 255, 255);
                 selection-background-color: rgba(0, 120, 212, 0.5);
                 color: #000000;
             }
             QLineEdit:focus {
                 border-color: #0078d4;
-                background: rgba(255, 255, 255, 0.9);
+                background: rgb(255, 255, 255);
             }
             QLineEdit::placeholder {
                 color: rgba(0, 0, 0, 0.5);
@@ -144,7 +144,7 @@ class BottomPanel(QWidget):
         self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.scroll_area.setStyleSheet("""
             QScrollArea {
-                background: rgba(255, 255, 255, 0.8);
+                background: rgb(255, 255, 255);
                 border: none;
                 border-radius: 8px;
                 outline: none;
@@ -382,7 +382,7 @@ class ClipboardItemWidget(QWidget):
         self.type_icon.setStyleSheet("""
             QLabel {
                 font-size: 20px;
-                background: rgba(0, 120, 212, 0.1);
+                background: rgb(240, 248, 255);
                 border-radius: 16px;
                 padding: 6px;
                 border: none;
@@ -431,7 +431,7 @@ class ClipboardItemWidget(QWidget):
         # 添加阴影效果 - 移到样式设置之后
         shadow = QGraphicsDropShadowEffect()
         shadow.setBlurRadius(8)
-        shadow.setColor(QColor(0, 0, 0, 30))
+        shadow.setColor(QColor(0, 0, 0, 50))
         shadow.setOffset(0, 2)
         self.setGraphicsEffect(shadow)
         
