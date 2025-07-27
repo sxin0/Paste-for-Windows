@@ -223,7 +223,6 @@ python test_auto_type.py
 
 ### 安全特性
 - **Windows Defender** - 兼容性认证
-- **UAC 支持** - 用户账户控制
 - **权限管理** - 最小权限原则
 - **数据加密** - 敏感数据保护
 

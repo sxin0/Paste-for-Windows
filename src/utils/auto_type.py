@@ -255,7 +255,6 @@ class AutoTypeManager:
                 "powershell",
                 "file explorer", "文件资源管理器",
                 "control panel", "控制面板",
-                "administrator", "管理员",
                 "system", "系统",
                 "security", "安全"
             ]
