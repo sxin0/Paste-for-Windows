@@ -29,6 +29,7 @@ class BottomPanel(QWidget):
     
     # 信号定义
     item_selected = pyqtSignal(ClipboardItem)  # 项目被选中
+    item_double_clicked = pyqtSignal(ClipboardItem)  # 项目双击上屏
     panel_closed = pyqtSignal()  # 面板关闭
     
     def __init__(self, clipboard_manager: ClipboardManager, parent=None):
@@ -241,8 +242,8 @@ class BottomPanel(QWidget):
         self.cards_layout.insertWidget(self.cards_layout.count() - 1, widget)
         
         # 连接信号
-        widget.item_clicked.connect(self.item_selected.emit)
-        widget.item_clicked.connect(self.hide_panel)
+        widget.item_clicked.connect(self._on_item_clicked)
+        widget.item_double_clicked.connect(self._on_item_double_clicked)
     
     def _on_item_added(self, item: ClipboardItem):
         """新项目添加"""
@@ -284,9 +285,35 @@ class BottomPanel(QWidget):
         for item in items:
             self._add_item_to_list(item)
     
-    def _on_item_clicked(self, item: QListWidgetItem):
-        """项目点击（保留兼容性）"""
-        pass
+    def _on_item_clicked(self, item: ClipboardItem):
+        """项目单击事件 - 选中项目"""
+        # 清除其他卡片的选中状态
+        self._clear_selection()
+        
+        # 找到对应的widget并设置选中状态
+        for i in range(self.cards_layout.count() - 1):  # 减1是因为最后一个是弹性空间
+            widget = self.cards_layout.itemAt(i).widget()
+            if widget and hasattr(widget, 'item') and widget.item.id == item.id:
+                widget.set_selected(True)
+                break
+        
+        # 发送选中信号
+        self.item_selected.emit(item)
+    
+    def _on_item_double_clicked(self, item: ClipboardItem):
+        """项目双击事件 - 内容上屏"""
+        # 发送双击信号
+        self.item_double_clicked.emit(item)
+        
+        # 隐藏面板
+        self.hide_panel()
+    
+    def _clear_selection(self):
+        """清除所有卡片的选中状态"""
+        for i in range(self.cards_layout.count() - 1):  # 减1是因为最后一个是弹性空间
+            widget = self.cards_layout.itemAt(i).widget()
+            if widget and hasattr(widget, 'set_selected'):
+                widget.set_selected(False)
     
     def show_panel(self):
         """显示面板"""
@@ -481,11 +508,13 @@ class BottomPanel(QWidget):
 class ClipboardItemWidget(QWidget):
     """剪贴板项目组件"""
     
-    item_clicked = pyqtSignal(ClipboardItem)
+    item_clicked = pyqtSignal(ClipboardItem)  # 单击选中
+    item_double_clicked = pyqtSignal(ClipboardItem)  # 双击上屏
     
     def __init__(self, item: ClipboardItem, parent=None):
         super().__init__(parent)
         self.item = item
+        self.is_selected = False  # 选中状态
         self._setup_ui()
     
     def _setup_ui(self):
@@ -559,7 +588,8 @@ class ClipboardItemWidget(QWidget):
         
         # 设置鼠标事件
         self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.mousePressEvent = self._on_click
+        # 启用双击事件
+        self.setMouseTracking(True)
     
     def _get_type_icon(self) -> str:
         """获取类型图标"""
@@ -600,10 +630,25 @@ class ClipboardItemWidget(QWidget):
         else:
             return "刚刚"
     
-    def _on_click(self, event):
-        """点击事件"""
+    def mousePressEvent(self, event):
+        """鼠标按下事件"""
         if event.button() == Qt.MouseButton.LeftButton:
+            # 单击选中
+            self.set_selected(True)
             self.item_clicked.emit(self.item)
+        super().mousePressEvent(event)
+    
+    def mouseDoubleClickEvent(self, event):
+        """鼠标双击事件"""
+        if event.button() == Qt.MouseButton.LeftButton:
+            # 双击上屏
+            self.item_double_clicked.emit(self.item)
+        super().mouseDoubleClickEvent(event)
+    
+    def set_selected(self, selected: bool):
+        """设置选中状态"""
+        self.is_selected = selected
+        self.update()  # 触发重绘以显示选中效果
     
     def paintEvent(self, event):
         """重写绘制事件来手动绘制背景"""
@@ -622,10 +667,38 @@ class ClipboardItemWidget(QWidget):
         # 获取当前类型的样式
         style = type_styles.get(self.item.content_type, {"bg": "#F5F5F5", "border": "#9E9E9E"})
         
+        # 根据选中状态调整样式
+        if self.is_selected:
+            # 选中状态：更深的背景色和更粗的边框
+            bg_color = QColor(style['bg'])
+            bg_color.setAlpha(200)  # 增加不透明度
+            border_color = QColor(style['border'])
+            border_width = 3
+        else:
+            # 正常状态
+            bg_color = QColor(style['bg'])
+            border_color = QColor(style['border'])
+            border_width = 2
+        
         # 绘制背景
-        painter.setBrush(QBrush(QColor(style['bg'])))
-        painter.setPen(QPen(QColor(style['border']), 2))
+        painter.setBrush(QBrush(bg_color))
+        painter.setPen(QPen(border_color, border_width))
         painter.drawRoundedRect(self.rect(), 8, 8)
+        
+        # 如果选中，绘制选中指示器
+        if self.is_selected:
+            # 在右上角绘制选中指示器
+            indicator_rect = QRect(self.width() - 20, 5, 15, 15)
+            painter.setBrush(QBrush(QColor("#4CAF50")))
+            painter.setPen(QPen(QColor("#4CAF50"), 1))
+            painter.drawEllipse(indicator_rect)
+            
+            # 绘制白色勾号
+            painter.setPen(QPen(QColor("white"), 2))
+            painter.drawLine(indicator_rect.center().x() - 3, indicator_rect.center().y(), 
+                           indicator_rect.center().x() - 1, indicator_rect.center().y() + 2)
+            painter.drawLine(indicator_rect.center().x() - 1, indicator_rect.center().y() + 2,
+                           indicator_rect.center().x() + 3, indicator_rect.center().y() - 2)
         
         # 调用父类的绘制事件
         super().paintEvent(event) 

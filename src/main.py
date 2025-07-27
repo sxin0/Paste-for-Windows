@@ -162,6 +162,7 @@ class MainWindow(QMainWindow):
         
         # 底部面板信号
         self.bottom_panel.item_selected.connect(self._on_item_selected)
+        self.bottom_panel.item_double_clicked.connect(self._on_item_double_clicked)
         
         # 剪贴板管理器信号
         self.clipboard_manager.item_added.connect(self._on_item_added)
@@ -186,6 +187,14 @@ class MainWindow(QMainWindow):
     
     def _on_item_selected(self, item):
         """项目被选中"""
+        # 单击选中：只显示通知，不复制到剪贴板
+        self.system_tray.show_message(
+            "项目已选中",
+            f"已选中：{item.content[:50]}{'...' if len(item.content) > 50 else ''}\n双击可复制到剪贴板"
+        )
+    
+    def _on_item_double_clicked(self, item):
+        """项目双击 - 内容上屏"""
         # 将选中的内容复制到剪贴板
         import win32clipboard
         import win32con
@@ -198,7 +207,7 @@ class MainWindow(QMainWindow):
             
             # 显示通知
             self.system_tray.show_message(
-                "内容已复制",
+                "内容已上屏",
                 f"已复制到剪贴板：{item.content[:50]}{'...' if len(item.content) > 50 else ''}"
             )
             
