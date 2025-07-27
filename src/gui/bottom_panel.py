@@ -18,7 +18,7 @@ from PyQt6.QtCore import (
 )
 from PyQt6.QtGui import (
     QPainter, QColor, QLinearGradient, QBrush, QPen, QFont,
-    QPixmap, QIcon
+    QPixmap, QIcon, QPalette
 )
 
 from ..core.clipboard_manager import ClipboardItem, ClipboardManager
@@ -167,8 +167,8 @@ class BottomPanel(QWidget):
         # 创建卡片容器widget
         self.cards_container = QWidget()
         self.cards_layout = QHBoxLayout(self.cards_container)
-        self.cards_layout.setContentsMargins(16, 16, 16, 16)
-        self.cards_layout.setSpacing(12)  # 恢复原来的卡片间距
+        self.cards_layout.setContentsMargins(20, 20, 20, 20)  # 增加容器边距
+        self.cards_layout.setSpacing(8)  # 减少卡片间距，让卡片更紧凑
         self.cards_layout.addStretch()  # 添加弹性空间
         
         self.scroll_area.setWidget(self.cards_container)
@@ -368,9 +368,12 @@ class ClipboardItemWidget(QWidget):
     
     def _setup_ui(self):
         """设置界面"""
+        # 设置对象名称以便样式表选择器工作
+        self.setObjectName("ClipboardItemWidget")
+        
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(12, 12, 12, 12)
-        layout.setSpacing(8)
+        layout.setContentsMargins(16, 16, 16, 16)  # 增加内边距
+        layout.setSpacing(10)  # 增加内部元素间距
         
         # 类型图标
         self.type_icon = QLabel(self._get_type_icon())
@@ -382,6 +385,7 @@ class ClipboardItemWidget(QWidget):
                 background: rgba(0, 120, 212, 0.1);
                 border-radius: 16px;
                 padding: 6px;
+                border: none;
             }
         """)
         
@@ -392,6 +396,8 @@ class ClipboardItemWidget(QWidget):
                 font-size: 12px;
                 color: #000000;
                 line-height: 1.4;
+                background: transparent;
+                border: none;
             }
         """)
         self.content_label.setWordWrap(True)
@@ -404,6 +410,8 @@ class ClipboardItemWidget(QWidget):
             QLabel {
                 font-size: 10px;
                 color: rgba(0, 0, 0, 0.6);
+                background: transparent;
+                border: none;
             }
         """)
         self.time_label.setAlignment(Qt.AlignmentFlag.AlignBottom)
@@ -414,22 +422,18 @@ class ClipboardItemWidget(QWidget):
         layout.addWidget(self.time_label, 0, Qt.AlignmentFlag.AlignCenter)
         
         # 设置固定宽度，适合卡片显示
-        self.setFixedWidth(200)
-        self.setMinimumHeight(120)
+        self.setFixedWidth(220)  # 增加宽度以适应新的内边距
+        self.setMinimumHeight(140)  # 增加高度以适应新的内边距
         
-        # 设置整体样式
-        self.setStyleSheet("""
-            ClipboardItemWidget {
-                background: rgba(255, 255, 255, 0.6);
-                border: 1px solid rgba(0, 0, 0, 0.1);
-                border-radius: 8px;
-                margin: 4px;
-            }
-            ClipboardItemWidget:hover {
-                background: rgba(255, 255, 255, 0.8);
-                border-color: rgba(0, 120, 212, 0.3);
-            }
-        """)
+        # 设置整体样式（边框颜色将在_set_border_color中设置）
+        self._set_border_color()
+        
+        # 添加阴影效果 - 移到样式设置之后
+        shadow = QGraphicsDropShadowEffect()
+        shadow.setBlurRadius(8)
+        shadow.setColor(QColor(0, 0, 0, 30))
+        shadow.setOffset(0, 2)
+        self.setGraphicsEffect(shadow)
         
         # 设置鼠标事件
         self.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -453,6 +457,12 @@ class ClipboardItemWidget(QWidget):
             return content[:60] + "..."
         return content
     
+    def _set_border_color(self):
+        """根据内容类型设置背景颜色和边框"""
+        # 现在背景和边框都在 paintEvent 中处理
+        # 只需要触发重绘
+        self.update()
+    
     def _format_time(self) -> str:
         """格式化时间"""
         from datetime import datetime
@@ -471,4 +481,29 @@ class ClipboardItemWidget(QWidget):
     def _on_click(self, event):
         """点击事件"""
         if event.button() == Qt.MouseButton.LeftButton:
-            self.item_clicked.emit(self.item) 
+            self.item_clicked.emit(self.item)
+    
+    def paintEvent(self, event):
+        """重写绘制事件来手动绘制背景"""
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        
+        # 定义每种类型的背景色和边框色
+        type_styles = {
+            "text": {"bg": "#E3F2FD", "border": "#2196F3"},      # 浅蓝色 - 文本
+            "link": {"bg": "#E8F5E8", "border": "#4CAF50"},      # 浅绿色 - 链接
+            "file": {"bg": "#FFEBEE", "border": "#F44336"},      # 浅红色 - 文件
+            "code": {"bg": "#F3E5F5", "border": "#9C27B0"},      # 浅紫色 - 代码
+            "image": {"bg": "#FFF3E0", "border": "#FF9800"}      # 浅橙色 - 图片
+        }
+        
+        # 获取当前类型的样式
+        style = type_styles.get(self.item.content_type, {"bg": "#F5F5F5", "border": "#9E9E9E"})
+        
+        # 绘制背景
+        painter.setBrush(QBrush(QColor(style['bg'])))
+        painter.setPen(QPen(QColor(style['border']), 2))
+        painter.drawRoundedRect(self.rect(), 8, 8)
+        
+        # 调用父类的绘制事件
+        super().paintEvent(event) 

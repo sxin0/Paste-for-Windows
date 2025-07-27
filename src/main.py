@@ -85,7 +85,14 @@ class MainWindow(QMainWindow):
             "• 实时剪贴板监听\n"
             "• 文本内容存储\n"
             "• 基础搜索功能\n"
-            "• 系统托盘集成"
+            "• 系统托盘集成\n"
+            "• 颜色分类卡片边框\n\n"
+            "🎨 卡片效果：\n"
+            "• 文本：蓝色边框\n"
+            "• 链接：绿色边框\n"
+            "• 代码：紫色边框\n"
+            "• 文件：红色边框\n"
+            "• 图片：橙色边框"
         )
         info_label.setStyleSheet("""
             QLabel {
@@ -141,6 +148,9 @@ class MainWindow(QMainWindow):
         
         # 更新状态
         self._update_status()
+        
+        # 添加测试卡片（仅在开发模式下）
+        self._add_test_cards()
     
     def _connect_signals(self):
         """连接信号"""
@@ -199,6 +209,63 @@ class MainWindow(QMainWindow):
         """错误处理"""
         print(f"错误: {error_message}")
         self.system_tray.show_message("错误", error_message)
+    
+    def _add_test_cards(self):
+        """添加测试卡片"""
+        from datetime import datetime, timedelta
+        from src.core.clipboard_manager import ClipboardItem
+        
+        # 创建测试数据
+        test_items = [
+            ClipboardItem(
+                "test_text_1", 
+                "这是一段测试文本内容，用来展示文本类型卡片的边框效果。文本类型使用蓝色边框。", 
+                "text", 
+                datetime.now() - timedelta(minutes=5)
+            ),
+            ClipboardItem(
+                "test_link_1", 
+                "https://www.example.com", 
+                "link", 
+                datetime.now() - timedelta(minutes=4)
+            ),
+            ClipboardItem(
+                "test_code_1", 
+                "print('Hello, World!')\ndef main():\n    print('这是一个代码示例')", 
+                "code", 
+                datetime.now() - timedelta(minutes=3)
+            ),
+            ClipboardItem(
+                "test_file_1", 
+                "C:\\Users\\Documents\\important_document.txt", 
+                "file", 
+                datetime.now() - timedelta(minutes=2)
+            ),
+            ClipboardItem(
+                "test_image_1", 
+                "图片文件：screenshot.png (2.5MB)", 
+                "image", 
+                datetime.now() - timedelta(minutes=1)
+            ),
+            ClipboardItem(
+                "test_text_2", 
+                "这是另一个文本类型的卡片，用来测试多个相同类型卡片的显示效果。", 
+                "text", 
+                datetime.now()
+            ),
+        ]
+        
+        # 添加测试项目到剪贴板管理器
+        for item in test_items:
+            self.clipboard_manager._add_item(item)
+        
+        print("✅ 已添加测试卡片，包含以下类型：")
+        print("   - 文本类型（蓝色边框）")
+        print("   - 链接类型（绿色边框）")
+        print("   - 代码类型（紫色边框）")
+        print("   - 文件类型（红色边框）")
+        print("   - 图片类型（橙色边框）")
+        print("   按 Win+V 或点击托盘图标查看卡片效果")
     
     def show_main_window(self):
         """显示主窗口"""
