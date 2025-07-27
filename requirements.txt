@@ -1,6 +1,47 @@
-pyperclip==1.8.2
-pystray==0.19.4
-pillow==10.0.1
-keyboard==0.13.5
-pywin32
-win10toast 
+# Paste for Windows - 依赖包列表
+
+# GUI 框架
+PyQt6>=6.4.0
+PyQt6-Qt6>=6.4.0
+
+# 系统集成
+pywin32>=305
+keyboard>=0.13.5
+pystray>=0.19.4
+
+# 数据处理
+pillow>=9.5.0
+python-magic>=0.4.27
+chardet>=5.1.0
+
+# 搜索功能
+whoosh>=2.7.4
+jieba>=0.42.1
+
+# 配置管理
+pydantic>=1.10.0
+toml>=0.10.2
+
+# 系统通知
+win10toast>=0.9
+
+# 剪贴板操作
+pyperclip>=1.8.2
+
+# 异步支持
+asyncio-mqtt>=0.11.1
+
+# 日志管理
+loguru>=0.7.0
+
+# 数据序列化
+orjson>=3.8.0
+
+# 网络请求
+requests>=2.31.0
+
+# 加密支持
+cryptography>=41.0.0
+
+# 压缩支持
+zstandard>=0.21.0 

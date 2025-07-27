@@ -1,0 +1,229 @@
+[build-system]
+requires = ["setuptools>=67.0.0", "wheel>=0.40.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "paste-for-windows"
+version = "1.0.0"
+description = "专为 Windows 11 设计的现代化剪贴板管理器"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Your Name", email = "your.email@example.com"}
+]
+maintainers = [
+    {name = "Your Name", email = "your.email@example.com"}
+]
+keywords = ["clipboard", "manager", "windows", "gui", "productivity"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: Microsoft :: Windows :: Windows 10",
+    "Operating System :: Microsoft :: Windows :: Windows 11",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Desktop Environment",
+    "Topic :: Utilities",
+]
+requires-python = ">=3.9"
+dependencies = [
+    "PyQt6>=6.4.0",
+    "PyQt6-Qt6>=6.4.0",
+    "pywin32>=305",
+    "keyboard>=0.13.5",
+    "pystray>=0.19.4",
+    "pillow>=9.5.0",
+    "python-magic>=0.4.27",
+    "chardet>=5.1.0",
+    "whoosh>=2.7.4",
+    "jieba>=0.42.1",
+    "pydantic>=1.10.0",
+    "toml>=0.10.2",
+    "win10toast>=0.9",
+    "pyperclip>=1.8.2",
+    "asyncio-mqtt>=0.11.1",
+    "loguru>=0.7.0",
+    "orjson>=3.8.0",
+    "requests>=2.31.0",
+    "cryptography>=41.0.0",
+    "zstandard>=0.21.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.3.1",
+    "pytest-cov>=4.1.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-mock>=3.10.0",
+    "black>=23.3.0",
+    "isort>=5.12.0",
+    "flake8>=6.0.0",
+    "mypy>=1.3.0",
+    "pylint>=2.17.0",
+    "types-requests>=2.31.0",
+    "types-pillow>=9.5.0",
+    "sphinx>=7.0.0",
+    "sphinx-rtd-theme>=1.2.0",
+    "build>=0.10.0",
+    "setuptools>=67.0.0",
+    "wheel>=0.40.0",
+    "pyinstaller>=5.10.0",
+    "cx-freeze>=6.14.0",
+    "memory-profiler>=0.60.0",
+    "line-profiler>=4.0.0",
+    "bandit>=1.7.0",
+    "safety>=2.3.0",
+    "coverage>=7.2.0",
+    "pre-commit>=3.3.0",
+    "tox>=4.5.0",
+    "ipdb>=0.13.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/your-username/paste-for-windows"
+Documentation = "https://github.com/your-username/paste-for-windows#readme"
+Repository = "https://github.com/your-username/paste-for-windows.git"
+"Bug Tracker" = "https://github.com/your-username/paste-for-windows/issues"
+"Discussions" = "https://github.com/your-username/paste-for-windows/discussions"
+
+[project.scripts]
+paste-for-windows = "src.main:main"
+
+[project.gui-scripts]
+paste-for-windows = "src.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"paste_for_windows" = ["resources/**/*"]
+
+[tool.black]
+line-length = 88
+target-version = ['py39']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+known_first_party = ["paste_for_windows"]
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[[tool.mypy.overrides]]
+module = [
+    "PyQt6.*",
+    "pystray.*",
+    "keyboard.*",
+    "win32api.*",
+    "win32gui.*",
+    "win32con.*",
+    "win32clipboard.*",
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -q --strict-markers --strict-config"
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+]
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+    "*/venv/*",
+    "*/\.venv/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
+
+[tool.bandit]
+exclude_dirs = ["tests", "venv", ".venv"]
+skips = ["B101", "B601"]
+
+[tool.pylint.messages_control]
+disable = [
+    "C0114",  # missing-module-docstring
+    "C0115",  # missing-class-docstring
+    "C0116",  # missing-function-docstring
+    "R0903",  # too-few-public-methods
+    "R0913",  # too-many-arguments
+    "R0914",  # too-many-locals
+    "R0915",  # too-many-statements
+    "W0621",  # redefined-outer-name
+    "W0622",  # redefined-builtin
+    "W0703",  # broad-except
+]
+
+[tool.pylint.format]
+max-line-length = 88
+
+[tool.pylint.design]
+max-args = 10
+max-locals = 20
+max-returns = 10
+max-statements = 50
+max-branches = 15
+max-parents = 7
+max-attributes = 10
+min-public-methods = 1
+max-public-methods = 20
+
+[tool.pylint.similarities]
+min-similarity-lines = 4
+ignore-comments = "yes"
+ignore-docstrings = "yes"
+ignore-imports = "yes" 

@@ -1,233 +1,336 @@
- # Paste for Windows
+# Paste for Windows
 
-一个功能强大的Windows剪贴板管理器，灵感来源于macOS的Paste应用。自动监听剪贴板变化，智能管理历史记录，让您的工作更加高效。
+<div align="center">
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
-![Platform](https://img.shields.io/badge/platform-Windows%2011-lightgrey.svg)
-![Python](https://img.shields.io/badge/python-3.7%2B-green.svg)
-![License](https://img.shields.io/badge/license-MIT-orange.svg)
+![Paste for Windows Logo](https://img.shields.io/badge/Paste%20for%20Windows-v1.0.0-blue?style=for-the-badge&logo=windows)
+![Python](https://img.shields.io/badge/Python-3.9+-green?style=for-the-badge&logo=python)
+![PyQt6](https://img.shields.io/badge/PyQt6-6.4+-orange?style=for-the-badge&logo=qt)
+![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)
 
-## ✨ 主要特性
+**专为 Windows 11 设计的现代化剪贴板管理器**
 
-- 🔄 **自动监听剪贴板变化** - 实时捕获并保存剪贴板内容
-- 📝 **多格式支持** - 支持文本、图片、文件路径等多种格式
-- 🔍 **智能搜索** - 快速查找历史记录中的内容
-- ⭐ **收藏功能** - 标记重要内容，永久保存
-- 💾 **数据持久化** - 使用SQLite数据库安全存储历史记录
-- 🎯 **全局快捷键** - `Ctrl+Shift+V` 快速呼出主窗口
-- 🔔 **系统托盘集成** - 最小化到系统托盘，不占用任务栏空间
-- 🚀 **开机自启动** - 可选择开机自动启动，无需手动启动
-- 🎨 **现代化界面** - 简洁美观的用户界面，操作直观
-- 📊 **统计信息** - 详细的使用统计和数据分析
+[功能特性](#-功能特性) • [快速开始](#-快速开始) • [文档](#-文档) • [贡献](#-贡献) • [许可证](#-许可证)
 
-## 🖼️ 界面预览
-
-### 主界面
-- 左侧：剪贴板历史列表，显示时间、类型和内容预览
-- 右侧：详细信息面板，显示完整内容和元数据
-- 顶部：搜索框，支持实时搜索过滤
-
-### 系统托盘
-- 显示主窗口
-- 快速设置
-- 统计信息
-- 导出历史记录
-- 退出程序
-
-## 🚀 快速开始
-
-### 系统要求
-
-- Windows 10/11
-- Python 3.7 或更高版本
-- 4GB 内存（推荐）
-- 100MB 可用磁盘空间
-
-### 自动安装（推荐）
-
-1. 下载项目文件到本地目录
-2. 运行安装脚本：
-   ```bash
-   python install.py
-   ```
-3. 安装脚本会自动：
-   - 检查Python版本
-   - 安装所需依赖
-   - 创建桌面快捷方式
-   - 创建开始菜单项
-   - 设置开机自启动
-
-### 手动安装
-
-1. 克隆或下载项目：
-   ```bash
-   git clone https://github.com/your-username/paste-for-windows.git
-   cd paste-for-windows
-   ```
-
-2. 安装依赖：
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. 运行程序：
-   ```bash
-   python main.py
-   ```
-
-## 📖 使用说明
-
-### 基本操作
-
-1. **启动程序**
-   - 双击桌面快捷方式
-   - 或运行 `python main.py`
-
-2. **快捷键**
-   - `Ctrl+Shift+V`: 打开/关闭主窗口
-   - `F5`: 刷新历史记录
-   - `Delete`: 删除选中项目
-   - `Ctrl+C`: 复制选中项目到剪贴板
-
-3. **基本操作**
-   - 双击列表项：复制到剪贴板
-   - 右键菜单：复制、收藏、删除
-   - 搜索框：输入关键词实时搜索
-
-### 高级功能
-
-#### 内容类型识别
-- 📝 **文本内容**：自动识别URL、邮箱、电话号码
-- 🖼️ **图片内容**：支持剪贴板中的图片
-- 📁 **文件路径**：复制文件时自动记录路径
-
-#### 搜索和过滤
-- 支持内容搜索
-- 按类型过滤
-- 收藏项目筛选
-
-#### 数据管理
-- 历史记录自动清理
-- 支持导出为JSON或TXT格式
-- 数据备份和恢复
-
-## ⚙️ 配置选项
-
-程序支持多种配置选项，可通过设置窗口修改：
-
-### 常规设置
-- **最大历史项目数**：控制保存的历史记录数量（默认100）
-- **开机自启动**：是否随系统启动（默认开启）
-- **显示通知**：是否显示系统通知（默认开启）
-- **全局快捷键**：自定义快捷键组合（默认Ctrl+Shift+V）
-
-### 剪贴板设置
-- **监听间隔**：剪贴板检查频率（默认0.5秒）
-- **保存图片**：是否保存图片内容（默认开启）
-- **保存文件路径**：是否保存文件路径（默认开启）
-- **最大文本长度**：单个文本项目的最大长度（默认10000字符）
-
-### 外观设置
-- **主题**：浅色/深色主题
-- **窗口大小**：自定义窗口尺寸
-
-配置文件位置：`%USERPROFILE%\.clipboardmanager\config.ini`
-
-## 🗂️ 项目结构
-
-```
-paste-for-windows/
-├── main.py              # 主程序入口
-├── gui.py               # GUI界面模块
-├── clipboard_manager.py # 剪贴板管理核心
-├── database.py          # 数据库操作
-├── utils.py             # 工具函数
-├── config.py            # 配置管理
-├── install.py           # 安装脚本
-├── requirements.txt     # Python依赖
-├── README.md            # 项目说明
-└── clipboard.ico        # 应用程序图标
-```
-
-## 🔧 开发说明
-
-### 核心模块说明
-
-- **main.py**: 应用程序入口，负责初始化和协调各个模块
-- **clipboard_manager.py**: 剪贴板监听和内容处理的核心逻辑
-- **database.py**: SQLite数据库操作，负责数据持久化
-- **gui.py**: Tkinter图形界面，包含主窗口和设置窗口
-- **utils.py**: 工具类，包含系统托盘、热键管理、自启动等功能
-- **config.py**: 配置文件管理
-
-### 添加新功能
-
-1. 在相应模块中添加功能函数
-2. 在GUI中添加对应的界面元素
-3. 在配置文件中添加相关设置项
-4. 更新数据库结构（如需要）
-
-### 打包为可执行文件
-
-使用PyInstaller打包：
-
-```bash
-pip install pyinstaller
-pyinstaller --onefile --windowed --icon=clipboard.ico main.py
-```
-
-## 🚨 常见问题
-
-### Q: 程序启动后没有反应
-A: 检查系统托盘，程序可能已最小化到托盘。使用快捷键Ctrl+Shift+V可以呼出主窗口。
-
-### Q: 快捷键不起作用
-A: 
-1. 检查是否有其他程序占用了相同快捷键
-2. 尝试以管理员权限运行程序
-3. 在设置中更换快捷键组合
-
-### Q: 剪贴板内容没有被自动记录
-A: 
-1. 确认程序正在运行（检查系统托盘）
-2. 检查设置中的监听间隔配置
-3. 重启程序尝试
-
-### Q: 数据库文件在哪里？
-A: 数据库和配置文件保存在 `%USERPROFILE%\.clipboardmanager\` 目录下。
-
-### Q: 如何备份数据？
-A: 可以通过以下方式备份：
-1. 使用程序内的导出功能
-2. 直接复制 `%USERPROFILE%\.clipboardmanager\` 目录
-
-## 🤝 贡献
-
-欢迎提交Issue和Pull Request！
-
-1. Fork本项目
-2. 创建feature分支：`git checkout -b feature/AmazingFeature`
-3. 提交更改：`git commit -m 'Add some AmazingFeature'`
-4. 推送到分支：`git push origin feature/AmazingFeature`
-5. 提交Pull Request
-
-## 📄 许可证
-
-本项目采用MIT许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
-
-## 🙏 致谢
-
-- 感谢macOS Paste应用的设计灵感
-- 感谢所有开源库的贡献者
-- 感谢Python社区的支持
-
-## 📞 联系方式
-
-如果您有任何问题或建议，请通过以下方式联系：
-
-- 提交Issue：[GitHub Issues](https://github.com/your-username/paste-for-windows/issues)
-- 邮箱：your-email@example.com
+</div>
 
 ---
 
-**享受高效的剪贴板管理体验！** 🚀
+## 🎯 项目简介
+
+Paste for Windows 是一个专为 Windows 11 设计的现代化剪贴板管理器，参考了 macOS 上优秀的 Paste 应用，并针对 Windows 平台进行了深度优化。它提供了强大的剪贴板管理功能，帮助用户更高效地管理和使用剪贴板内容。
+
+### ✨ 核心特性
+
+- 🔄 **实时监听** - 自动捕获所有剪贴板变化
+- 📋 **多格式支持** - 文本、图片、文件、链接等
+- 🔍 **智能搜索** - 全文搜索、模糊匹配、高级过滤
+- ⭐ **收藏管理** - 重要内容收藏、标签系统
+- 🎨 **现代化界面** - Windows 11 风格、毛玻璃效果
+- ⚡ **高性能** - 轻量级、快速响应
+- 🔒 **隐私保护** - 本地存储、数据加密
+- 🚀 **系统集成** - 全局热键、系统托盘、开机自启
+
+## 🚀 快速开始
+
+### 📋 系统要求
+
+- **操作系统**: Windows 10 (1903+) / Windows 11
+- **架构**: x64
+- **内存**: 4GB RAM (推荐 8GB)
+- **存储**: 100MB 可用空间
+- **Python**: 3.9 或更高版本
+
+### ⚡ 快速安装
+
+#### 方法一：使用安装脚本（推荐）
+
+```bash
+# 克隆项目
+git clone https://github.com/your-username/paste-for-windows.git
+cd paste-for-windows
+
+# 运行安装脚本
+python install.py
+```
+
+#### 方法二：手动安装
+
+```bash
+# 克隆项目
+git clone https://github.com/your-username/paste-for-windows.git
+cd paste-for-windows
+
+# 创建虚拟环境
+python -m venv venv
+venv\Scripts\activate
+
+# 安装依赖
+pip install -r requirements.txt
+
+# 运行应用
+python main.py
+```
+
+### 🎮 基本使用
+
+1. **启动应用**: 运行后应用会自动最小化到系统托盘
+2. **呼出界面**: 按 `Win + V` 快捷键呼出主窗口
+3. **复制内容**: 正常复制任何内容，应用会自动记录
+4. **搜索历史**: 在搜索框中输入关键词快速查找
+5. **粘贴历史**: 双击或右键选择要粘贴的内容
+
+## 📁 项目结构
+
+```
+paste-for-windows/
+├── 📁 src/                          # 源代码目录
+│   ├── 📁 core/                     # 核心模块
+│   │   ├── clipboard_manager.py     # 剪贴板管理核心
+│   │   ├── data_processor.py        # 数据处理器
+│   │   ├── search_engine.py         # 搜索引擎
+│   │   └── config_manager.py        # 配置管理
+│   ├── 📁 gui/                      # 图形界面
+│   │   ├── main_window.py           # 主窗口
+│   │   ├── clipboard_list.py        # 剪贴板列表组件
+│   │   ├── preview_panel.py         # 预览面板
+│   │   ├── settings_dialog.py       # 设置对话框
+│   │   └── system_tray.py           # 系统托盘
+│   ├── 📁 data/                     # 数据层
+│   │   ├── database.py              # 数据库操作
+│   │   ├── models.py                # 数据模型
+│   │   └── cache_manager.py         # 缓存管理
+│   ├── 📁 utils/                    # 工具类
+│   │   ├── hotkey_manager.py        # 热键管理
+│   │   ├── file_utils.py            # 文件工具
+│   │   └── system_utils.py          # 系统工具
+│   └── 📁 services/                 # 服务层
+│       ├── windows_api.py           # Windows API 封装
+│       ├── notification_service.py  # 通知服务
+│       └── sync_service.py          # 同步服务
+├── 📁 resources/                    # 资源文件
+│   ├── 📁 icons/                    # 图标文件
+│   ├── 📁 images/                   # 图片资源
+│   └── 📁 locales/                  # 多语言文件
+├── 📁 tests/                        # 测试文件
+├── 📁 docs/                         # 文档
+├── main.py                          # 程序入口
+├── requirements.txt                 # 依赖列表
+└── README.md                        # 项目说明
+```
+
+## 🔧 核心模块功能
+
+### 📋 剪贴板管理器 (ClipboardManager)
+- **实时监听**: 自动捕获剪贴板变化
+- **多格式支持**: 文本、图片、文件、链接等
+- **内容识别**: 智能识别内容类型
+- **数据预处理**: 格式转换和优化
+
+### 🔍 搜索引擎 (SearchEngine)
+- **全文搜索**: 基于 Whoosh 的全文搜索引擎
+- **模糊匹配**: 支持模糊搜索和拼写纠错
+- **高级过滤**: 按类型、时间、大小等过滤
+- **搜索历史**: 记录搜索历史，快速重复搜索
+
+### 💾 数据库管理 (DatabaseManager)
+- **SQLite 存储**: 轻量级本地数据库
+- **数据模型**: 完整的数据结构设计
+- **缓存管理**: 内存缓存提升性能
+- **数据导出**: 支持多种格式导出
+
+### 🎨 用户界面 (GUI)
+- **现代化设计**: Windows 11 风格界面
+- **响应式布局**: 自适应不同屏幕尺寸
+- **主题切换**: 深色/浅色主题支持
+- **动画效果**: 流畅的界面动画
+
+## 🎯 主要功能特性
+
+### ✨ 核心功能
+1. **自动剪贴板监听** - 实时捕获剪贴板变化
+2. **多格式支持** - 文本、图片、文件路径、链接
+3. **智能搜索** - 全文搜索、模糊匹配、高级过滤
+4. **收藏功能** - 标记重要内容，快速访问
+5. **标签系统** - 自定义标签，分类管理
+6. **数据持久化** - SQLite 本地存储
+
+### 🎮 用户交互
+1. **全局快捷键** - `Win + V` 呼出主窗口
+2. **系统托盘** - 最小化到托盘，右键菜单
+3. **现代化界面** - 简洁美观的 GUI
+4. **右键菜单** - 复制、收藏、删除等操作
+5. **拖拽操作** - 支持拖拽整理内容
+
+### ⚙️ 配置选项
+1. **常规设置** - 开机自启、通知、语言
+2. **剪贴板设置** - 监听间隔、内容类型过滤
+3. **外观设置** - 主题、透明度、字体大小
+4. **快捷键设置** - 自定义全局快捷键
+
+### 🔧 高级功能
+1. **使用统计** - 详细的使用数据分析
+2. **数据导出** - 支持 JSON/TXT/CSV 格式
+3. **数据导入** - 从其他剪贴板管理器导入
+4. **备份恢复** - 自动备份和数据恢复
+5. **性能监控** - 内存使用和性能监控
+
+## 📱 Windows 11 特色功能
+
+### 系统集成
+- **Windows 11 设计语言** - 遵循 Fluent Design
+- **任务栏集成** - 任务栏快速访问
+- **开始菜单** - 开始菜单快捷方式
+- **文件资源管理器** - 右键菜单集成
+
+### 性能优化
+- **Windows 11 优化** - 针对新系统优化
+- **硬件加速** - GPU 加速渲染
+- **内存管理** - 智能内存使用
+- **启动优化** - 快速启动
+
+### 安全特性
+- **Windows Defender** - 兼容性认证
+- **UAC 支持** - 用户账户控制
+- **权限管理** - 最小权限原则
+- **数据加密** - 敏感数据保护
+
+## 📦 依赖关系
+
+### Python 依赖包
+```python
+# GUI 框架
+PyQt6>=6.4.0              # 现代化 GUI 框架
+PyQt6-Qt6>=6.4.0          # Qt6 核心库
+
+# 系统集成
+pywin32>=305              # Windows API 访问
+keyboard>=0.13.5          # 全局热键支持
+pystray>=0.19.4           # 系统托盘支持
+
+# 数据处理
+pillow>=9.5.0             # 图像处理
+python-magic>=0.4.27      # 文件类型检测
+chardet>=5.1.0            # 字符编码检测
+
+# 搜索功能
+whoosh>=2.7.4             # 全文搜索引擎
+jieba>=0.42.1             # 中文分词
+
+# 配置管理
+pydantic>=1.10.0          # 数据验证
+toml>=0.10.2              # 配置文件格式
+
+# 开发工具
+pytest>=7.3.1             # 测试框架
+black>=23.3.0             # 代码格式化
+mypy>=1.3.0               # 类型检查
+```
+
+## 🚀 部署方式
+
+### 开发环境
+```bash
+# 克隆项目
+git clone https://github.com/your-username/paste-for-windows.git
+cd paste-for-windows
+
+# 创建虚拟环境
+python -m venv venv
+venv\Scripts\activate
+
+# 安装开发依赖
+pip install -r requirements-dev.txt
+
+# 运行测试
+pytest
+
+# 启动开发服务器
+python main.py --dev
+```
+
+### 生产环境
+```bash
+# 构建应用
+python build.py
+
+# 安装包
+pip install dist/paste_for_windows-1.0.0-py3-none-any.whl
+
+# 运行应用
+paste-for-windows
+```
+
+### 后台运行
+```bash
+# 后台运行
+python main.py --background
+
+# 开机自启
+python main.py --autostart
+```
+
+## 📚 文档
+
+- [功能特性文档](FEATURES.md) - 详细的功能特性说明
+- [技术架构文档](ARCHITECTURE.md) - 技术架构和设计文档
+- [开发路线图](ROADMAP.md) - 项目开发计划和里程碑
+- [API 文档](docs/API.md) - 开发者 API 文档
+- [部署指南](docs/DEPLOYMENT.md) - 部署和安装指南
+- [贡献指南](docs/CONTRIBUTING.md) - 如何贡献代码
+
+## 🤝 贡献
+
+我们欢迎所有形式的贡献！请查看我们的 [贡献指南](docs/CONTRIBUTING.md) 了解如何参与项目开发。
+
+### 贡献方式
+- 🐛 **报告 Bug** - 在 GitHub Issues 中报告问题
+- 💡 **功能建议** - 提出新功能建议
+- 📝 **文档改进** - 改进文档和翻译
+- 🔧 **代码贡献** - 提交 Pull Request
+- ⭐ **Star 项目** - 给项目点个 Star
+
+### 开发环境设置
+```bash
+# 克隆项目
+git clone https://github.com/your-username/paste-for-windows.git
+cd paste-for-windows
+
+# 安装开发依赖
+pip install -r requirements-dev.txt
+
+# 运行测试
+pytest
+
+# 代码格式化
+black src/
+isort src/
+
+# 类型检查
+mypy src/
+```
+
+## 📄 许可证
+
+本项目采用 [MIT 许可证](LICENSE) 开源。
+
+## 🙏 致谢
+
+- 感谢 [Paste for Mac](https://pasteapp.io/) 的灵感
+- 感谢所有贡献者的支持
+- 感谢开源社区的力量
+
+## 📞 联系我们
+
+- **GitHub**: [https://github.com/your-username/paste-for-windows](https://github.com/your-username/paste-for-windows)
+- **Issues**: [https://github.com/your-username/paste-for-windows/issues](https://github.com/your-username/paste-for-windows/issues)
+- **Discussions**: [https://github.com/your-username/paste-for-windows/discussions](https://github.com/your-username/paste-for-windows/discussions)
+
+---
+
+<div align="center">
+
+**如果这个项目对你有帮助，请给它一个 ⭐ Star！**
+
+Made with ❤️ for Windows users
+
+</div>
