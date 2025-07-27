@@ -86,13 +86,19 @@ class MainWindow(QMainWindow):
             "• 文本内容存储\n"
             "• 基础搜索功能\n"
             "• 系统托盘集成\n"
-            "• 颜色分类卡片边框\n\n"
+            "• 颜色分类卡片边框\n"
+            "• 🚀 自动上屏功能\n\n"
             "🎨 卡片效果：\n"
             "• 文本：蓝色边框\n"
             "• 链接：绿色边框\n"
             "• 代码：紫色边框\n"
             "• 文件：红色边框\n"
-            "• 图片：橙色边框"
+            "• 图片：橙色边框\n\n"
+            "🚀 自动上屏：\n"
+            "• 双击卡片直接输入到当前窗口\n"
+            "• 支持微信、QQ、浏览器等应用\n"
+            "• 自动安全检查，保护系统安全\n"
+            "• 失败时自动回退到剪贴板方式"
         )
         info_label.setStyleSheet("""
             QLabel {
@@ -194,8 +200,60 @@ class MainWindow(QMainWindow):
         )
     
     def _on_item_double_clicked(self, item):
-        """项目双击 - 内容上屏"""
-        # 将选中的内容复制到剪贴板
+        """项目双击 - 自动上屏"""
+        # 导入自动上屏管理器
+        from src.utils.auto_type import auto_type_manager
+        
+        try:
+            print("🔄 开始自动上屏流程...")
+            
+            # 检查是否安全进行自动输入
+            if not auto_type_manager.is_safe_to_type():
+                print("⚠️ 当前窗口不安全，回退到剪贴板方式")
+                self._fallback_to_clipboard(item)
+                return
+            
+            # 获取当前窗口信息（剪贴板历史窗口）
+            current_window = auto_type_manager.get_active_window_info()
+            current_title = current_window.get("title", "未知窗口")
+            print(f"当前窗口: {current_title}")
+            
+            # 查找目标窗口（确认窗口是否还存在）
+            target_window = auto_type_manager.find_best_target_window()
+            if not target_window:
+                print("❌ 没有找到合适的目标窗口，回退到剪贴板方式")
+                self._fallback_to_clipboard(item)
+                return
+            
+            target_title = target_window.get("title", "未知窗口")
+            print(f"目标窗口: {target_title}")
+            
+            # 执行自动上屏（切换到目标窗口并输入内容）
+            success = auto_type_manager.type_text(
+                item.content, 
+                method="clipboard", 
+                switch_to_previous=True
+            )
+            
+            if success:
+                print("✅ 自动上屏成功")
+                # 显示成功通知
+                self.system_tray.show_message(
+                    "自动上屏成功",
+                    f"已切换到：{target_title}\n已输入内容：{item.content[:50]}{'...' if len(item.content) > 50 else ''}"
+                )
+            else:
+                print("❌ 自动上屏失败，回退到剪贴板方式")
+                # 如果自动上屏失败，回退到剪贴板方式
+                self._fallback_to_clipboard(item)
+                
+        except Exception as e:
+            print(f"❌ 自动上屏异常: {e}")
+            # 回退到剪贴板方式
+            self._fallback_to_clipboard(item)
+    
+    def _fallback_to_clipboard(self, item):
+        """回退到剪贴板方式"""
         import win32clipboard
         import win32con
         
@@ -207,8 +265,8 @@ class MainWindow(QMainWindow):
             
             # 显示通知
             self.system_tray.show_message(
-                "内容已上屏",
-                f"已复制到剪贴板：{item.content[:50]}{'...' if len(item.content) > 50 else ''}"
+                "已复制到剪贴板",
+                f"自动上屏失败，已复制到剪贴板：{item.content[:50]}{'...' if len(item.content) > 50 else ''}\n请手动粘贴"
             )
             
         except Exception as e:

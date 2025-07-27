@@ -302,11 +302,19 @@ class BottomPanel(QWidget):
     
     def _on_item_double_clicked(self, item: ClipboardItem):
         """项目双击事件 - 内容上屏"""
-        # 发送双击信号
-        self.item_double_clicked.emit(item)
-        
-        # 隐藏面板
+        # 先隐藏面板，避免窗口切换时的干扰
         self.hide_panel()
+        
+        # 等待面板隐藏动画完成后再发送双击信号
+        # 使用QTimer延迟执行，确保面板完全隐藏
+        from PyQt6.QtCore import QTimer
+        
+        def delayed_emit():
+            # 发送双击信号
+            self.item_double_clicked.emit(item)
+        
+        # 延迟200毫秒执行，确保面板隐藏动画完成
+        QTimer.singleShot(200, delayed_emit)
     
     def _clear_selection(self):
         """清除所有卡片的选中状态"""

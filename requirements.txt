@@ -28,6 +28,9 @@ win10toast>=0.9
 # 剪贴板操作
 pyperclip>=1.8.2
 
+# 自动上屏功能
+pyautogui>=0.9.54
+
 # 异步支持
 asyncio-mqtt>=0.11.1
 
