@@ -7,12 +7,41 @@ Paste for Windows - 主应用程序
 
 import sys
 import os
+import ctypes
 from pathlib import Path
 import time # Added for retry mechanism
 
-from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel
+from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, QMessageBox
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QFont
+
+
+def is_admin():
+    """检查是否具有管理员权限"""
+    try:
+        return ctypes.windll.shell32.IsUserAnAdmin()
+    except:
+        return False
+
+
+def run_as_admin():
+    """以管理员权限重新运行程序"""
+    try:
+        if not is_admin():
+            print("🔒 需要管理员权限，正在提升权限...")
+            ctypes.windll.shell32.ShellExecuteW(
+                None, 
+                "runas", 
+                sys.executable, 
+                " ".join(sys.argv), 
+                None, 
+                1
+            )
+            sys.exit(0)
+        return True
+    except Exception as e:
+        print(f"❌ 提升权限失败: {e}")
+        return False
 
 # 添加项目根目录到 Python 路径
 project_root = Path(__file__).parent.parent
@@ -649,6 +678,13 @@ class PasteForWindowsApp:
 
 def main():
     """主函数"""
+    # 检查并提升权限
+    if not run_as_admin():
+        print("❌ 无法获取管理员权限，程序退出")
+        return 1
+    
+    print("✅ 已获得管理员权限")
+    
     app = PasteForWindowsApp()
     
     try:

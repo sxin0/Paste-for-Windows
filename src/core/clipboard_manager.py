@@ -8,6 +8,8 @@
 import asyncio
 import time
 import hashlib
+import ctypes
+import os
 from datetime import datetime
 from typing import Optional, Callable, Dict, Any, List
 from dataclasses import dataclass, field
@@ -157,7 +159,7 @@ class ClipboardListener(QObject):
 
 
 class ClipboardListenerThread(QThread):
-    """剪贴板监听线程 - 使用Windows消息机制"""
+    """剪贴板监听线程 - 使用轮询方式（稳定版）"""
     
     # 信号定义
     clipboard_changed = pyqtSignal(str)  # 剪贴板内容变化
@@ -166,147 +168,162 @@ class ClipboardListenerThread(QThread):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._is_running = False
-        self._hwnd = None
-        self._clipboard_viewer_next = None
         self._last_content = ""
+        self._poll_interval = 0.5  # 改为0.5秒轮询间隔
+        self._consecutive_failures = 0
+        self._max_consecutive_failures = 5  # 减少连续失败次数限制
+        self._log_file = "clipboard_changes.log"  # 记录文件
         
     def run(self):
         """运行监听线程"""
         try:
             self._is_running = True
+            self._consecutive_failures = 0
+            print("🔄 开始剪贴板监听（轮询方式）...")
+            print(f"📊 轮询间隔: {self._poll_interval} 秒")
+            print(f"🔄 最大连续失败次数: {self._max_consecutive_failures}")
             
-            # 创建隐藏窗口来接收剪贴板消息
-            self._hwnd = win32gui.CreateWindowEx(
-                0, "STATIC", "ClipboardListener",
-                0, 0, 0, 0, 0, 0, 0, None, None
-            )
+            # 获取初始剪贴板内容
+            initial_content = self._get_clipboard_content()
+            if initial_content:
+                self._last_content = initial_content
+                print(f"📋 初始剪贴板内容: {initial_content[:50]}{'...' if len(initial_content) > 50 else ''}")
+            else:
+                print("📋 初始剪贴板为空或无法访问")
             
-            if not self._hwnd:
-                self.error_occurred.emit("无法创建剪贴板监听窗口")
-                return
+            print("💡 现在请复制一些文本内容进行测试")
             
-            # 注册为剪贴板查看器
-            self._clipboard_viewer_next = win32gui.SetClipboardViewer(self._hwnd)
-            
-            print("✅ 剪贴板监听窗口已创建，开始监听...")
-            
-            # 消息循环
+            # 轮询循环
             while self._is_running:
                 try:
-                    # 处理Windows消息
-                    msg = win32gui.GetMessage(None, 0, 0)
+                    # 获取当前剪贴板内容
+                    current_content = self._get_clipboard_content()
                     
-                    if msg[0] == 0:  # WM_QUIT
-                        break
-                    
-                    if msg[0] == win32con.WM_CHANGECBCHAIN:
-                        # 剪贴板查看器链变化
-                        if msg[1] == self._hwnd:
-                            self._clipboard_viewer_next = msg[2]
-                        elif self._clipboard_viewer_next:
-                            win32gui.SendMessage(self._clipboard_viewer_next, msg[0], msg[1], msg[2])
-                    
-                    elif msg[0] == win32con.WM_DRAWCLIPBOARD:
-                        # 剪贴板内容变化
-                        self._handle_clipboard_change()
+                    # 检查内容是否发生变化
+                    if current_content and current_content != self._last_content:
+                        print(f"🆕 检测到剪贴板变化: {current_content[:50]}{'...' if len(current_content) > 50 else ''}")
                         
-                        # 传递消息给下一个查看器
-                        if self._clipboard_viewer_next:
-                            win32gui.SendMessage(self._clipboard_viewer_next, msg[0], msg[1], msg[2])
-                    
-                    else:
-                        # 其他消息
-                        win32gui.TranslateMessage(msg)
-                        win32gui.DispatchMessage(msg)
+                        # 写入记录
+                        content_type = "文本"
+                        if current_content.startswith("[图片数据"):
+                            content_type = "图片"
+                        elif current_content.startswith("[文件列表"):
+                            content_type = "文件列表"
+                        elif current_content.startswith("[未知格式"):
+                            content_type = "未知"
+                        elif current_content.startswith("获取剪贴板失败"):
+                            content_type = "错误"
                         
+                        self._write_to_log(current_content, content_type)
+                        
+                        self._last_content = current_content
+                        self.clipboard_changed.emit(current_content)
+                        self._consecutive_failures = 0  # 重置失败计数
+                    
+                    # 等待下一次轮询
+                    time.sleep(self._poll_interval)
+                    
                 except Exception as e:
-                    if self._is_running:
-                        self.error_occurred.emit(f"消息处理错误: {str(e)}")
-                    break
+                    self._consecutive_failures += 1
+                    error_msg = f"轮询过程中出现错误: {e}"
+                    print(f"❌ {error_msg} (第{self._consecutive_failures}次)")
+                    
+                    if self._consecutive_failures >= self._max_consecutive_failures:
+                        print(f"❌ 连续失败次数过多({self._consecutive_failures})，停止监听")
+                        self.error_occurred.emit(f"连续失败次数过多，停止监听: {error_msg}")
+                        break
+                    else:
+                        self.error_occurred.emit(f"轮询错误 (第{self._consecutive_failures}次): {str(e)}")
+                        # 短暂等待后继续
+                        time.sleep(0.2)
                     
         except Exception as e:
-            self.error_occurred.emit(f"剪贴板监听线程错误: {str(e)}")
+            print(f"❌ 监听线程错误: {e}")
+            self.error_occurred.emit(f"监听线程错误: {str(e)}")
         finally:
-            self._cleanup()
+            print("🔄 监听线程已退出")
     
-    def _handle_clipboard_change(self):
-        """处理剪贴板变化"""
+    def _get_clipboard_content(self):
+        """获取剪贴板内容（改进版）"""
         try:
-            # 延迟一下，确保剪贴板内容已更新
-            time.sleep(0.05)
+            win32clipboard.OpenClipboard()
             
-            # 获取剪贴板内容
-            content = self._get_clipboard_content_safe()
-            if content and content != self._last_content:
-                self._last_content = content
-                self.clipboard_changed.emit(content)
-                print(f"📋 检测到剪贴板变化: {content[:30]}{'...' if len(content) > 30 else ''}")
-                
-        except Exception as e:
-            if self._is_running:
-                self.error_occurred.emit(f"处理剪贴板变化错误: {str(e)}")
-    
-    def _get_clipboard_content_safe(self) -> Optional[str]:
-        """安全地获取剪贴板内容"""
-        # 多次尝试打开剪贴板
-        for attempt in range(3):
+            # 尝试获取文本内容
             try:
-                # 尝试打开剪贴板
-                if win32clipboard.OpenClipboard():
+                content = win32clipboard.GetClipboardData(win32con.CF_UNICODETEXT)
+                content_type = "文本"
+            except:
+                # 如果不是文本，尝试获取其他格式
+                try:
+                    content = win32clipboard.GetClipboardData(win32con.CF_TEXT)
+                    content_type = "文本(ANSI)"
+                except:
+                    # 检查是否有图片
                     try:
-                        # 检查是否有文本内容
-                        if win32clipboard.IsClipboardFormatAvailable(win32con.CF_UNICODETEXT):
-                            content = win32clipboard.GetClipboardData(win32con.CF_UNICODETEXT)
-                            return content
-                        elif win32clipboard.IsClipboardFormatAvailable(win32con.CF_TEXT):
-                            content = win32clipboard.GetClipboardData(win32con.CF_TEXT).decode('utf-8')
-                            return content
-                        else:
-                            return ""
-                    finally:
-                        # 确保关闭剪贴板
+                        content = win32clipboard.GetClipboardData(win32con.CF_DIB)
+                        content_type = "图片"
+                    except:
+                        # 检查是否有文件列表
                         try:
-                            win32clipboard.CloseClipboard()
+                            content = win32clipboard.GetClipboardData(win32con.CF_HDROP)
+                            content_type = "文件列表"
                         except:
-                            pass
-                else:
-                    # 如果无法打开剪贴板，等待一下再重试
-                    if attempt < 2:  # 不是最后一次尝试
-                        time.sleep(0.05)
-                        continue
-                    else:
-                        return None
-                        
-            except Exception as e:
-                # 如果出现异常，等待一下再重试
-                if attempt < 2:  # 不是最后一次尝试
-                    time.sleep(0.05)
-                    continue
-                else:
-                    return None
-        
-        return None
+                            content = "未知格式"
+                            content_type = "未知"
+            
+            win32clipboard.CloseClipboard()
+            
+            # 处理不同类型的内容
+            if content_type == "文本(ANSI)" and isinstance(content, bytes):
+                content = content.decode('utf-8', errors='ignore')
+            elif content_type == "图片":
+                content = f"[图片数据 - {len(content)} 字节]"
+            elif content_type == "文件列表":
+                content = f"[文件列表 - {len(content)} 字节]"
+            elif content_type == "未知":
+                content = "[未知格式内容]"
+            
+            return content
+            
+        except Exception as e:
+            return f"获取剪贴板失败: {str(e)}"
+    
+    def _write_to_log(self, content: str, content_type: str = "文本"):
+        """写入记录到日志文件"""
+        try:
+            current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            
+            # 限制内容长度，避免日志文件过大
+            if len(content) > 200:
+                display_content = content[:200] + "..."
+                content_length = len(content)
+            else:
+                display_content = content
+                content_length = len(content)
+            
+            log_entry = f"[{current_time}] 剪贴板内容变化 ({content_type}): {display_content}"
+            if len(content) > 200:
+                log_entry += f" (总长度: {content_length} 字符)"
+            
+            # 写入日志文件
+            with open(self._log_file, 'a', encoding='utf-8') as f:
+                f.write(log_entry + "\n")
+                f.write("-" * 80 + "\n")
+            
+            print(f"📝 已记录到日志: {self._log_file}")
+            
+        except Exception as e:
+            print(f"❌ 写入日志失败: {e}")
     
     def stop(self):
         """停止监听"""
+        print("🛑 停止剪贴板监听...")
         self._is_running = False
-        self._cleanup()
     
-    def _cleanup(self):
-        """清理资源"""
-        try:
-            if self._hwnd:
-                # 从剪贴板查看器链中移除
-                if self._clipboard_viewer_next:
-                    win32gui.ChangeClipboardChain(self._hwnd, self._clipboard_viewer_next)
-                
-                # 销毁窗口
-                win32gui.DestroyWindow(self._hwnd)
-                self._hwnd = None
-                self._clipboard_viewer_next = None
-                
-        except Exception as e:
-            print(f"清理剪贴板监听资源时出错: {e}")
+    def set_poll_interval(self, interval):
+        """设置轮询间隔"""
+        self._poll_interval = interval
+        print(f"📊 轮询间隔已设置为: {interval} 秒")
 
 
 class ClipboardManager(QObject):
