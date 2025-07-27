@@ -73,38 +73,64 @@ class ClipboardApp:
     def process_commands(self):
         """处理命令队列（在主线程中运行）"""
         try:
-            while True:
-                try:
-                    command = self.command_queue.get_nowait()
-                    print(f"处理命令: {command}")
-                    sys.stdout.flush()
-                    
-                    if command == 'toggle_window':
-                        self.toggle_main_window()
-                    elif command == 'open_settings':
-                        print("处理open_settings命令")
+            queue_size = self.command_queue.qsize()
+            print(f"开始处理命令队列，队列大小: {queue_size}")
+            sys.stdout.flush()
+            
+            if queue_size == 0:
+                print("队列为空，跳过处理")
+                sys.stdout.flush()
+            else:
+                while True:
+                    try:
+                        command = self.command_queue.get_nowait()
+                        print(f"处理命令: {command}")
                         sys.stdout.flush()
-                        if hasattr(self.gui, 'open_settings'):
-                            print("调用gui.open_settings()")
-                            sys.stdout.flush()
-                            self.gui.open_settings()
-                            print("gui.open_settings()调用完成")
-                            sys.stdout.flush()
-                        else:
-                            print("❌ gui对象没有open_settings方法")
-                            sys.stdout.flush()
-                    elif command == 'show_statistics':
-                        if hasattr(self.gui, 'show_statistics'):
-                            self.gui.show_statistics()
-                    elif command == 'export_history':
-                        if hasattr(self.gui, 'export_history'):
-                            self.gui.export_history()
-                    elif command == 'quit':
-                        self.stop()
-                        break
                         
-                except queue.Empty:
-                    break
+                        if command == 'toggle_window':
+                            print("执行toggle_window命令")
+                            sys.stdout.flush()
+                            self.toggle_main_window()
+                        elif command == 'open_settings':
+                            print("处理open_settings命令")
+                            sys.stdout.flush()
+                            
+                            # 确保主窗口可见
+                            if hasattr(self.gui, 'root') and self.gui.root:
+                                try:
+                                    if not self.gui.root.winfo_viewable():
+                                        print("主窗口不可见，先显示主窗口")
+                                        self.gui.root.deiconify()
+                                        self.gui.root.lift()
+                                        self.gui.root.focus_force()
+                                        self.window_visible = True
+                                except Exception as e:
+                                    print(f"显示主窗口时出错: {e}")
+                            
+                            # 打开设置窗口
+                            if hasattr(self.gui, 'open_settings'):
+                                print("调用gui.open_settings()")
+                                sys.stdout.flush()
+                                self.gui.open_settings()
+                                print("gui.open_settings()调用完成")
+                                sys.stdout.flush()
+                            else:
+                                print("❌ gui对象没有open_settings方法")
+                                sys.stdout.flush()
+                        elif command == 'show_statistics':
+                            if hasattr(self.gui, 'show_statistics'):
+                                self.gui.show_statistics()
+                        elif command == 'export_history':
+                            if hasattr(self.gui, 'export_history'):
+                                self.gui.export_history()
+                        elif command == 'quit':
+                            self.stop()
+                            break
+                            
+                    except queue.Empty:
+                        print("命令队列处理完毕")
+                        sys.stdout.flush()
+                        break
         except Exception as e:
             print(f"处理命令时出错: {e}")
             import traceback
@@ -113,9 +139,14 @@ class ClipboardApp:
         # 继续处理命令 - 确保在主线程中运行
         if self.is_running and hasattr(self.gui, 'root') and self.gui.root:
             try:
+                print("安排下次命令处理")
+                sys.stdout.flush()
                 self.gui.root.after(100, self.process_commands)
             except Exception as e:
                 print(f"安排下次命令处理时出错: {e}")
+        else:
+            print("无法安排下次命令处理：程序未运行或主窗口不存在")
+            sys.stdout.flush()
     
     def toggle_main_window(self):
         """切换主窗口显示状态"""
@@ -160,24 +191,6 @@ class ClipboardApp:
                     self.gui.root.deiconify()
                     self.gui.root.state('normal')
                     
-                    # 设置窗口位置和大小
-                    window_width = config.get('general', 'window_width', '800')
-                    window_height = config.get('general', 'window_height', '600')
-                    
-                    # 获取屏幕尺寸
-                    screen_width = self.gui.root.winfo_screenwidth()
-                    screen_height = self.gui.root.winfo_screenheight()
-                    
-                    # 计算居中位置
-                    x = (screen_width - int(window_width)) // 2
-                    y = (screen_height - int(window_height)) // 2
-                    
-                    # 设置窗口位置和大小
-                    self.gui.root.geometry(f"{window_width}x{window_height}+{x}+{y}")
-                    
-                    # 强制更新窗口
-                    self.gui.root.update()
-                    
                     # 提升窗口到前台
                     self.gui.root.lift()
                     self.gui.root.focus_force()
@@ -191,7 +204,7 @@ class ClipboardApp:
                             pass
                     self.gui.root.after(300, remove_topmost)
                     
-                    # 再次强制更新
+                    # 强制更新
                     self.gui.root.update_idletasks()
                     
                     self.window_visible = True
@@ -281,6 +294,8 @@ class ClipboardApp:
             print("剪贴板监听已启动")
             sys.stdout.flush()
             
+            # 默认显示主窗口（除非明确指定后台模式）
+            # 默认显示主窗口（除非明确指定后台模式）
             if show_window:
                 # 显示主窗口
                 self.window_visible = True
@@ -305,6 +320,20 @@ class ClipboardApp:
             # 开始处理命令队列 - 确保在主线程中运行
             print("开始处理命令队列...")
             sys.stdout.flush()
+            
+            # 立即处理一次命令队列，然后安排定期处理
+            try:
+                print("调用初始命令处理...")
+                sys.stdout.flush()
+                self.process_commands()
+                print("初始命令处理完成")
+                sys.stdout.flush()
+            except Exception as e:
+                print(f"初始命令处理失败: {e}")
+                import traceback
+                traceback.print_exc()
+            
+            # 安排定期处理
             root.after(100, self.process_commands)
             
             # 绑定窗口关闭事件
@@ -378,8 +407,9 @@ def main():
         app = ClipboardApp()
         app.initialize()
         
-        # 启动应用程序
+        # 启动应用程序 - 默认显示主窗口，除非明确指定后台模式
         show_window = not args.background
+        print(f"启动模式: {'前台' if show_window else '后台'}")
         app.start(show_window=show_window)
         
     except KeyboardInterrupt:
