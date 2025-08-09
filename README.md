@@ -47,7 +47,7 @@ Paste for Windows 是一个专为 Windows 11 设计的现代化剪贴板管理�
 
 ```bash
 # 克隆项目
-git clone https://github.com/your-username/paste-for-windows.git
+git clone https://github.com/sxin0/Paste-for-Windows.git
 cd paste-for-windows
 
 # 运行安装脚本
@@ -58,7 +58,7 @@ python install.py
 
 ```bash
 # 克隆项目
-git clone https://github.com/your-username/paste-for-windows.git
+git clone https://github.com/sxin0/Paste-for-Windows.git
 cd paste-for-windows
 
 # 创建虚拟环境
@@ -264,7 +264,7 @@ mypy>=1.3.0               # 类型检查
 ### 开发环境
 ```bash
 # 克隆项目
-git clone https://github.com/your-username/paste-for-windows.git
+git clone https://github.com/sxin0/Paste-for-Windows.git
 cd paste-for-windows
 
 # 创建虚拟环境
@@ -325,7 +325,7 @@ python main.py --autostart
 ### 开发环境设置
 ```bash
 # 克隆项目
-git clone https://github.com/your-username/paste-for-windows.git
+git clone https://github.com/sxin0/Paste-for-Windows.git
 cd paste-for-windows
 
 # 安装开发依赖
@@ -354,9 +354,9 @@ mypy src/
 
 ## 📞 联系我们
 
-- **GitHub**: [https://github.com/your-username/paste-for-windows](https://github.com/your-username/paste-for-windows)
-- **Issues**: [https://github.com/your-username/paste-for-windows/issues](https://github.com/your-username/paste-for-windows/issues)
-- **Discussions**: [https://github.com/your-username/paste-for-windows/discussions](https://github.com/your-username/paste-for-windows/discussions)
+- **GitHub**: [https://github.com/sxin0/Paste-for-Windows](https://github.com/sxin0/Paste-for-Windows)
+- **Issues**: [https://github.com/sxin0/Paste-for-Windows/issues](https://github.com/sxin0/Paste-for-Windows/issues)
+- **Discussions**: [https://github.com/sxin0/Paste-for-Windows/discussions](https://github.com/sxin0/Paste-for-Windows/discussions)
 
 ---
 
