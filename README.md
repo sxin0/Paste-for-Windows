@@ -2,6 +2,8 @@
 
 <div align="center">
 
+![Paste for Windows Banner](docs/screenshots/banner.png)
+
 ![Paste for Windows Logo](https://img.shields.io/badge/Paste%20for%20Windows-v1.0.0-blue?style=for-the-badge&logo=windows)
 ![Python](https://img.shields.io/badge/Python-3.9+-green?style=for-the-badge&logo=python)
 ![PyQt6](https://img.shields.io/badge/PyQt6-6.4+-orange?style=for-the-badge&logo=qt)
@@ -18,6 +20,26 @@
 ## 🎯 项目简介
 
 Paste for Windows 是一个专为 Windows 11 设计的现代化剪贴板管理器，参考了 macOS 上优秀的 Paste 应用，并针对 Windows 平台进行了深度优化。它提供了强大的剪贴板管理功能，帮助用户更高效地管理和使用剪贴板内容。
+
+## 📸 应用截图
+
+### 🖥️ 主界面
+<div align="center">
+<img src="docs/screenshots/img.png" alt="主界面截图">
+<p><em>现代化的剪贴板历史管理界面，支持实时搜索和内容预览</em></p>
+</div>
+
+### 🎨 功能特性展示
+<div align="center">
+<img src="docs/screenshots/feature_showcase.png" alt="功能特性展示">
+<p><em>丰富的功能特性，覆盖剪贴板管理的各个方面</em></p>
+</div>
+
+### 🔧 系统托盘
+<div align="center">
+<img src="docs/screenshots/img_2.png" alt="系统托盘菜单">
+<p><em>便捷的系统托盘菜单，快速访问核心功能</em></p>
+</div>
 
 ### ✨ 核心特性
 
@@ -75,10 +97,15 @@ python main.py
 ### 🎮 基本使用
 
 1. **启动应用**: 运行后应用会自动最小化到系统托盘
-2. **呼出界面**: 按 `Win + V` 快捷键呼出主窗口
+2. **呼出界面**: 按 `Alt + V` 快捷键呼出主窗口
 3. **复制内容**: 正常复制任何内容，应用会自动记录
 4. **搜索历史**: 在搜索框中输入关键词快速查找
 5. **粘贴历史**: 双击或右键选择要粘贴的内容
+
+<div align="center">
+<img src="docs/screenshots/img_1.png" alt="使用演示">
+<p><em>💡 提示：双击任意剪贴板卡片即可自动输入到当前窗口</em></p>
+</div>
 
 ## 📁 项目结构
 
@@ -356,7 +383,6 @@ mypy src/
 
 - **GitHub**: [https://github.com/sxin0/Paste-for-Windows](https://github.com/sxin0/Paste-for-Windows)
 - **Issues**: [https://github.com/sxin0/Paste-for-Windows/issues](https://github.com/sxin0/Paste-for-Windows/issues)
-- **Discussions**: [https://github.com/sxin0/Paste-for-Windows/discussions](https://github.com/sxin0/Paste-for-Windows/discussions)
 
 ---
 
